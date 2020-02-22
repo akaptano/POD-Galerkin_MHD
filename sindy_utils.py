@@ -112,52 +112,200 @@ def make_table(sindy_model,feature_names):
     #fig.tight_layout()
     plt.savefig('SINDy_table.pdf')
 
-def update_manifold_movie(frame,x_pred,x_test_sim,time):
+def update_manifold_movie(frame,x_pred,x_test_sim,time,num_POD):
     print(frame)
     plt.clf()
     fig = plt.figure(34300,figsize=(16,7))
     plt.suptitle('t = {:0.2f} (ms)'.format(time[frame]/1.0e3),fontsize=20)
-    ax1 = fig.add_subplot(121, projection='3d')
-    ax1.plot(x_pred[0:frame,0],x_pred[0:frame,1],x_pred[0:frame,2], 'k')
-    ax1.scatter(x_pred[frame-1,0],x_pred[frame-1,1],x_pred[frame-1,2], \
-        color='k', marker='o')
-    ax1.azim = frame/5.0
-    ax1.elev = frame/9.0
-    ax1.set_xlabel(r'$\varphi_1(t)$',fontsize=16)
-    ax1.set_ylabel(r'$\varphi_2(t)$',fontsize=16)
-    ax1.set_xlim(-0.3,0.3)
-    ax1.set_ylim(-0.3,0.3)
-    ax1.set_zlim(-0.3,0.3)
-    #ax1.set_xticklabels([])
-    #ax1.set_yticklabels([])
-    #ax1.set_zticklabels([])
-    ax1.zaxis.set_rotate_label(False)  # disable automatic rotation
-    ax1.set_zlabel(r'$\varphi_3(t)$',fontsize=16) #,rotation=90)
-    ax1.xaxis.labelpad=4
-    ax1.yaxis.labelpad=6
-    ax1.zaxis.labelpad=14
-    ax1.grid(True)
-    ax2 = fig.add_subplot(122, projection='3d')
-    ax2.plot(x_test_sim[0:frame,0],x_test_sim[0:frame,1],x_test_sim[0:frame,2], 'b--')
-    ax2.scatter(x_test_sim[frame-1,0],x_test_sim[frame-1,1],x_test_sim[frame-1,2], \
-        color='b', marker='o')
-    ax2.azim = frame/5.0
-    ax2.elev = frame/9.0
-    #ax2.plot(x_test_sim_predict[:,0],x_test_sim_predict[:,1],x_test_sim_predict[:,2], 'r--')
-    ax2.set_xlabel(r'$\varphi_1(t)$',fontsize=16)
-    ax2.set_ylabel(r'$\varphi_2(t)$',fontsize=16)
-    ax2.set_xlim(-0.3,0.3)
-    ax2.set_ylim(-0.3,0.3)
-    ax2.set_zlim(-0.3,0.3)
-    #ax2.set_xticklabels([])
-    #ax2.set_yticklabels([])
-    #ax2.set_zticklabels([])
-    ax2.zaxis.set_rotate_label(False)  # disable automatic rotation
-    ax2.set_zlabel(r'$\varphi_3(t)$',fontsize=16) #,rotation=90)
-    ax2.xaxis.labelpad=4
-    ax2.yaxis.labelpad=6
-    ax2.zaxis.labelpad=14
-    ax2.grid(True)
+    if num_POD==3:
+        ax1 = fig.add_subplot(121, projection='3d')
+        ax1.plot(x_pred[0:frame,0],x_pred[0:frame,1],x_pred[0:frame,2], 'k')
+        ax1.scatter(x_pred[frame-1,0],x_pred[frame-1,1],x_pred[frame-1,2], \
+            color='k', marker='o')
+        ax1.azim = frame/7.0
+        ax1.elev = frame/11.0
+        ax1.set_xlabel(r'$\varphi_1(t)$',fontsize=16)
+        ax1.set_ylabel(r'$\varphi_2(t)$',fontsize=16)
+        ax1.set_xlim(-0.3,0.3)
+        ax1.set_ylim(-0.3,0.3)
+        ax1.set_zlim(-0.3,0.3)
+        #ax1.set_xticklabels([])
+        #ax1.set_yticklabels([])
+        #ax1.set_zticklabels([])
+        ax1.zaxis.set_rotate_label(False)  # disable automatic rotation
+        ax1.set_zlabel(r'$\varphi_3(t)$',fontsize=16) #,rotation=90)
+        ax1.xaxis.labelpad=4
+        ax1.yaxis.labelpad=6
+        ax1.zaxis.labelpad=14
+        ax1.grid(True)
+        ax2 = fig.add_subplot(122, projection='3d')
+        ax2.plot(x_test_sim[0:frame,0],x_test_sim[0:frame,1],x_test_sim[0:frame,2], 'b--')
+        ax2.scatter(x_test_sim[frame-1,0],x_test_sim[frame-1,1],x_test_sim[frame-1,2], \
+            color='b', marker='o')
+        ax2.azim = frame/7.0
+        ax2.elev = frame/11.0
+        #ax2.plot(x_test_sim_predict[:,0],x_test_sim_predict[:,1],x_test_sim_predict[:,2], 'r--')
+        ax2.set_xlabel(r'$\varphi_1(t)$',fontsize=16)
+        ax2.set_ylabel(r'$\varphi_2(t)$',fontsize=16)
+        ax2.set_xlim(-0.3,0.3)
+        ax2.set_ylim(-0.3,0.3)
+        ax2.set_zlim(-0.3,0.3)
+        #ax2.set_xticklabels([])
+        #ax2.set_yticklabels([])
+        #ax2.set_zticklabels([])
+        ax2.zaxis.set_rotate_label(False)  # disable automatic rotation
+        ax2.set_zlabel(r'$\varphi_3(t)$',fontsize=16) #,rotation=90)
+        ax2.xaxis.labelpad=4
+        ax2.yaxis.labelpad=6
+        ax2.zaxis.labelpad=14
+        ax2.grid(True)
+    else:
+        ax1 = fig.add_subplot(421, projection='3d')
+        ax1.plot(x_pred[0:frame,0],x_pred[0:frame,1],x_pred[0:frame,2], 'k')
+        ax1.scatter(x_pred[frame-1,0],x_pred[frame-1,1],x_pred[frame-1,2], \
+            color='k', marker='o')
+        ax1.azim = frame/7.0
+        ax1.elev = frame/11.0
+        ax1.set_xlabel(r'$\varphi_1(t)$',fontsize=16)
+        ax1.set_ylabel(r'$\varphi_2(t)$',fontsize=16)
+        ax1.set_xlim(-0.3,0.3)
+        ax1.set_ylim(-0.3,0.3)
+        ax1.set_zlim(-0.3,0.3)
+        #ax1.set_xticklabels([])
+        #ax1.set_yticklabels([])
+        #ax1.set_zticklabels([])
+        ax1.zaxis.set_rotate_label(False)  # disable automatic rotation
+        ax1.set_zlabel(r'$\varphi_3(t)$',fontsize=16) #,rotation=90)
+        ax1.xaxis.labelpad=4
+        ax1.yaxis.labelpad=6
+        ax1.zaxis.labelpad=14
+        ax1.grid(True)
+        ax2 = fig.add_subplot(422, projection='3d')
+        ax2.plot(x_test_sim[0:frame,0],x_test_sim[0:frame,1],x_test_sim[0:frame,2], 'b--')
+        ax2.scatter(x_test_sim[frame-1,0],x_test_sim[frame-1,1],x_test_sim[frame-1,2], \
+            color='b', marker='o')
+        ax2.azim = frame/7.0
+        ax2.elev = frame/11.0
+        #ax2.plot(x_test_sim_predict[:,0],x_test_sim_predict[:,1],x_test_sim_predict[:,2], 'r--')
+        ax2.set_xlabel(r'$\varphi_1(t)$',fontsize=16)
+        ax2.set_ylabel(r'$\varphi_2(t)$',fontsize=16)
+        ax2.set_xlim(-0.3,0.3)
+        ax2.set_ylim(-0.3,0.3)
+        ax2.set_zlim(-0.3,0.3)
+        #ax2.set_xticklabels([])
+        #ax2.set_yticklabels([])
+        #ax2.set_zticklabels([])
+        ax2.zaxis.set_rotate_label(False)  # disable automatic rotation
+        ax2.set_zlabel(r'$\varphi_3(t)$',fontsize=16) #,rotation=90)
+        ax2.xaxis.labelpad=4
+        ax2.yaxis.labelpad=6
+        ax2.zaxis.labelpad=14
+        ax2.grid(True)
+        #
+        ax3 = fig.add_subplot(423, projection='3d')
+        ax3.plot(x_pred[0:frame,3],x_pred[0:frame,4],x_pred[0:frame,5], 'k')
+        ax3.scatter(x_pred[frame-1,3],x_pred[frame-1,4],x_pred[frame-1,5], \
+            color='k', marker='o')
+        ax3.azim = frame/7.0
+        ax3.elev = frame/11.0
+        ax3.set_xlabel(r'$\varphi_{4}(t)$',fontsize=16)
+        ax3.set_ylabel(r'$\varphi_{5}(t)$',fontsize=16)
+        ax3.set_xlim(-0.3,0.3)
+        ax3.set_ylim(-0.3,0.3)
+        ax3.set_zlim(-0.3,0.3)
+        ax3.zaxis.set_rotate_label(False)  # disable automatic rotation
+        ax3.set_zlabel(r'$\varphi_{6}(t)$',fontsize=16) #,rotation=90)
+        ax3.xaxis.labelpad=4
+        ax3.yaxis.labelpad=6
+        ax3.zaxis.labelpad=14
+        ax3.grid(True)
+        ax4 = fig.add_subplot(424, projection='3d')
+        ax4.plot(x_test_sim[0:frame,3],x_test_sim[0:frame,4],x_test_sim[0:frame,5], 'b--')
+        ax4.scatter(x_test_sim[frame-1,3],x_test_sim[frame-1,4],x_test_sim[frame-1,5], \
+            color='b', marker='o')
+        ax4.azim = frame/7.0
+        ax4.elev = frame/11.0
+        ax4.set_xlabel(r'$\varphi_{4}(t)$',fontsize=16)
+        ax4.set_ylabel(r'$\varphi_{5}(t)$',fontsize=16)
+        ax4.set_xlim(-0.3,0.3)
+        ax4.set_ylim(-0.3,0.3)
+        ax4.set_zlim(-0.3,0.3)
+        ax4.zaxis.set_rotate_label(False)  # disable automatic rotation
+        ax4.set_zlabel(r'$\varphi_{6}(t)$',fontsize=16) #,rotation=90)
+        ax4.xaxis.labelpad=4
+        ax4.yaxis.labelpad=6
+        ax4.zaxis.labelpad=14
+        ax4.grid(True)
+        #
+        ax5 = fig.add_subplot(425, projection='3d')
+        ax5.plot(x_pred[0:frame,6],x_pred[0:frame,7],x_pred[0:frame,8], 'k')
+        ax5.scatter(x_pred[frame-1,6],x_pred[frame-1,7],x_pred[frame-1,8], \
+            color='k', marker='o')
+        ax5.azim = frame/7.0
+        ax5.elev = frame/11.0
+        ax5.set_xlabel(r'$\varphi_{7}(t)$',fontsize=16)
+        ax5.set_ylabel(r'$\varphi_{8}(t)$',fontsize=16)
+        ax5.set_xlim(-0.3,0.3)
+        ax5.set_ylim(-0.3,0.3)
+        ax5.set_zlim(-0.3,0.3)
+        ax5.zaxis.set_rotate_label(False)  # disable automatic rotation
+        ax5.set_zlabel(r'$\varphi_{9}(t)$',fontsize=16) #,rotation=90)
+        ax5.xaxis.labelpad=4
+        ax5.yaxis.labelpad=6
+        ax5.zaxis.labelpad=14
+        ax5.grid(True)
+        ax6 = fig.add_subplot(426, projection='3d')
+        ax6.plot(x_test_sim[0:frame,6],x_test_sim[0:frame,7],x_test_sim[0:frame,8], 'b--')
+        ax6.scatter(x_test_sim[frame-1,6],x_test_sim[frame-1,7],x_test_sim[frame-1,8], \
+            color='b', marker='o')
+        ax6.azim = frame/7.0
+        ax6.elev = frame/11.0
+        ax6.set_xlabel(r'$\varphi_{7}(t)$',fontsize=16)
+        ax6.set_ylabel(r'$\varphi_{8}(t)$',fontsize=16)
+        ax6.set_xlim(-0.3,0.3)
+        ax6.set_ylim(-0.3,0.3)
+        ax6.set_zlim(-0.3,0.3)
+        ax6.zaxis.set_rotate_label(False)  # disable automatic rotation
+        ax6.set_zlabel(r'$\varphi_{9}(t)$',fontsize=16) #,rotation=90)
+        ax6.xaxis.labelpad=4
+        ax6.yaxis.labelpad=6
+        ax6.zaxis.labelpad=14
+        ax6.grid(True)
+        #
+        ax7 = fig.add_subplot(427, projection='3d')
+        ax7.plot(x_pred[0:frame,9],x_pred[0:frame,10],x_pred[0:frame,11], 'k')
+        ax7.scatter(x_pred[frame-1,9],x_pred[frame-1,10],x_pred[frame-1,11], \
+            color='k', marker='o')
+        ax7.azim = frame/7.0
+        ax7.elev = frame/11.0
+        ax7.set_xlabel(r'$\varphi_{10}(t)$',fontsize=16)
+        ax7.set_ylabel(r'$\varphi_{11}(t)$',fontsize=16)
+        ax7.set_xlim(-0.3,0.3)
+        ax7.set_ylim(-0.3,0.3)
+        ax7.set_zlim(-0.3,0.3)
+        ax7.zaxis.set_rotate_label(False)  # disable automatic rotation
+        ax7.set_zlabel(r'$\varphi_{12}(t)$',fontsize=16) #,rotation=90)
+        ax7.xaxis.labelpad=4
+        ax7.yaxis.labelpad=6
+        ax7.zaxis.labelpad=14
+        ax7.grid(True)
+        ax8 = fig.add_subplot(428, projection='3d')
+        ax8.plot(x_test_sim[0:frame,9],x_test_sim[0:frame,10],x_test_sim[0:frame,11], 'b--')
+        ax8.scatter(x_test_sim[frame-1,9],x_test_sim[frame-1,10],x_test_sim[frame-1,11], \
+            color='b', marker='o')
+        ax8.azim = frame/7.0
+        ax8.elev = frame/11.0
+        ax8.set_xlabel(r'$\varphi_{10}(t)$',fontsize=16)
+        ax8.set_ylabel(r'$\varphi_{11}(t)$',fontsize=16)
+        ax8.set_xlim(-0.3,0.3)
+        ax8.set_ylim(-0.3,0.3)
+        ax8.set_zlim(-0.3,0.3)
+        ax8.zaxis.set_rotate_label(False)  # disable automatic rotation
+        ax8.set_zlabel(r'$\varphi_{12}(t)$',fontsize=16) #,rotation=90)
+        ax8.xaxis.labelpad=4
+        ax8.yaxis.labelpad=6
+        ax8.zaxis.labelpad=14
+        ax8.grid(True)
 
 def make_contour_movie(x,y,z,B,B_sim,time,prefix):
     r = x**2+y**2
