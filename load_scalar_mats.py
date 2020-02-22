@@ -15,19 +15,19 @@ def load_mats(start,end,skip):
             print(i)
         if i < 10:
             Bx, By, Bz, Vx, Vy, Vz = \
-                np.loadtxt('HITSI_rMHD_HR_0000'+str(i)+'.csv',delimiter=',',usecols=(3,4,5,15,16,17),unpack=True)
+                np.loadtxt('../HITSI_rMHD_HR_0000'+str(i)+'.csv',delimiter=',',usecols=(3,4,5,15,16,17),unpack=True)
         elif i < 100:
             Bx, By, Bz, Vx, Vy, Vz = \
-                np.loadtxt('HITSI_rMHD_HR_000'+str(i)+'.csv',delimiter=',',usecols=(3,4,5,15,16,17),unpack=True)
+                np.loadtxt('../HITSI_rMHD_HR_000'+str(i)+'.csv',delimiter=',',usecols=(3,4,5,15,16,17),unpack=True)
         elif i < 1000:
             Bx, By, Bz, Vx, Vy, Vz = \
-                np.loadtxt('HITSI_rMHD_HR_00'+str(i)+'.csv',delimiter=',',usecols=(3,4,5,15,16,17),unpack=True)
+                np.loadtxt('../HITSI_rMHD_HR_00'+str(i)+'.csv',delimiter=',',usecols=(3,4,5,15,16,17),unpack=True)
         elif i < 10000:
             Bx, By, Bz, Vx, Vy, Vz = \
-                np.loadtxt('HITSI_rMHD_HR_0'+str(i)+'.csv',delimiter=',',usecols=(3,4,5,15,16,17),unpack=True)
+                np.loadtxt('../HITSI_rMHD_HR_0'+str(i)+'.csv',delimiter=',',usecols=(3,4,5,15,16,17),unpack=True)
         else:
             Bx, By, Bz, Vx, Vy, Vz = \
-                np.loadtxt('HITSI_rMHD_HR_'+str(i)+'.csv',delimiter=',',usecols=(3,4,5,15,16,17),unpack=True)
+                np.loadtxt('../HITSI_rMHD_HR_'+str(i)+'.csv',delimiter=',',usecols=(3,4,5,15,16,17),unpack=True)
         Bx_mat.append(Bx)
         By_mat.append(By)
         Bz_mat.append(Bz)

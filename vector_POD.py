@@ -31,10 +31,10 @@ def vector_POD(svd_mat,time,poly_order,threshold,num_POD):
     ax.set_yticks([1e-3,1e-2,1e-1,1e0])
     ax.set_yticklabels([r'$10^{-3}$',r'$10^{-2}$',r'$10^{-1}$',r'$10^{0}$'])
     plt.grid(True)
-    plt.savefig('BOD_spectrum.pdf')
-    plt.savefig('BOD_spectrum.png')
-    plt.savefig('BOD_spectrum.eps')
-    plt.savefig('BOD_spectrum.svg')
+    plt.savefig('Pictures/BOD_spectrum.pdf')
+    plt.savefig('Pictures/BOD_spectrum.png')
+    plt.savefig('Pictures/BOD_spectrum.eps')
+    plt.savefig('Pictures/BOD_spectrum.svg')
     print("% field in first num_POD modes = ",sum(np.sqrt(S[0:num_POD]))/sum(np.sqrt(S)))
     print("% energy in first num_POD modes = ",sum(S[0:num_POD])/sum(S))
     #ax = fig.add_subplot(122, projection='3d')
@@ -99,7 +99,7 @@ def vector_POD(svd_mat,time,poly_order,threshold,num_POD):
         axs[i].set_yticklabels([])
         #axs[i].set(xlabel='t', ylabel='$\dot x_{}$'.format(i))
         axs[i].grid(True)
-    plt.savefig('xdot.pdf')
+    plt.savefig('Pictures/xdot.pdf')
     fig, axs = plt.subplots(x_test.shape[1], 1, sharex=True, figsize=(7,9))
     #x_test_sim = np.array(x_test_sim)
     for i in range(x_test.shape[1]):
@@ -110,7 +110,7 @@ def vector_POD(svd_mat,time,poly_order,threshold,num_POD):
         axs[i].set_yticklabels([])
         #axs[i].set(xlabel='t', ylabel='$x_{}$'.format(i))
         axs[i].grid(True)
-    plt.savefig('x.pdf')
+    plt.savefig('Pictures/x.pdf')
     if (num_POD == 3):
         fig = plt.figure(34300,figsize=(16,10))
         ax1 = fig.add_subplot(121, projection='3d')
@@ -148,7 +148,7 @@ def vector_POD(svd_mat,time,poly_order,threshold,num_POD):
         fargs=(x_pred,x_test_sim,t_pred),repeat=False, \
         interval=100, blit=False)
         FPS = 25
-        ani.save('manifold.mp4',fps=FPS)
+        ani.save('Pictures/manifold.mp4',fps=FPS,dpi=200)
 
     elif (num_POD > 3):
         fig = plt.figure(figsize=(16,10))
@@ -283,16 +283,16 @@ def vector_POD(svd_mat,time,poly_order,threshold,num_POD):
         ax8.yaxis.labelpad=-12
         ax8.zaxis.labelpad=-14
         ax8.grid(True)
-    plt.savefig('manifold.pdf')
+    plt.savefig('Pictures/manifold.pdf')
     make_table(model,feature_names)
     # now attempt a pareto curve
     #print('performing Pareto analysis')
     poly_order = [poly_order]
     n_jobs = 1
     yscale = 'log'
-    thresholds=np.linspace(0,0.4,20)
-    #pareto_curve(STLSQ,PolynomialLibrary,FiniteDifference, \
-    #    feature_names,False,n_jobs,thresholds,poly_order,x_test,time,yscale)
+    thresholds=np.linspace(0,0.08,20)
+    pareto_curve(STLSQ,PolynomialLibrary,FiniteDifference, \
+        feature_names,False,n_jobs,thresholds,poly_order,x_fit,x_pred,t_fit,t_pred,yscale)
     for i in range(num_POD):
         x_test_sim[:,i] = x_test_sim[:,i]*sum(np.amax(abs(Vh),axis=1)[0:num_POD])
         x_pred[:,i] = x_pred[:,i]*sum(np.amax(abs(Vh),axis=1)[0:num_POD])

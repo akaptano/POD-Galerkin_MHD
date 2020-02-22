@@ -2,6 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import pandas as pd
 from scipy.interpolate import griddata
+import matplotlib.animation as animation
 
 def inner_product(Q,r):
     Qr = np.zeros(np.shape(Q))
@@ -23,38 +24,42 @@ def plot_Hc(time,Hc_mat,r):
     plt.figure(2000)
     plt.plot(time,np.diag(inner_mat))
 
-def plot_measurement_fits(time,Q,Qfit,t_pred):
+def plot_measurement_fits(Q,Qpred,Qfit,t_pred):
     # do nothing for now
     print(np.shape(Q))
-    plt.figure(3000)
+    plt.figure(324353400)
     plt.subplot(4,1,1)
-    plt.plot(time/1.0e3,Q[324,:],'k')
-    plt.plot(t_pred/1.0e3,Qfit[324,:],'b--')
+    plt.plot(t_pred/1.0e3,Q[324,:],'k')
+    plt.plot(t_pred/1.0e3,Qpred[324,:],'b--')
+    plt.plot(t_pred/1.0e3,Qfit[324,:],'r--')
     plt.grid(True)
     ax = plt.gca()
     ax.set_xticklabels([])
     plt.subplot(4,1,2)
-    plt.plot(time/1.0e3,Q[325,:],'k')
-    plt.plot(t_pred/1.0e3,Qfit[325,:],'b--')
+    plt.plot(t_pred/1.0e3,Q[325,:],'k')
+    plt.plot(t_pred/1.0e3,Qpred[325,:],'b--')
+    plt.plot(t_pred/1.0e3,Qfit[325,:],'r--')
     plt.grid(True)
     ax = plt.gca()
     ax.set_xticklabels([])
     plt.subplot(4,1,3)
-    plt.plot(time/1.0e3,Q[326,:],'k')
-    plt.plot(t_pred/1.0e3,Qfit[326,:],'b--')
+    plt.plot(t_pred/1.0e3,Q[326,:],'k')
+    plt.plot(t_pred/1.0e3,Qpred[326,:],'b--')
+    plt.plot(t_pred/1.0e3,Qfit[326,:],'r--')
     plt.grid(True)
     ax = plt.gca()
     ax.set_xticklabels([])
     plt.subplot(4,1,4)
-    plt.plot(time/1.0e3,Q[327,:],'k')
-    plt.plot(t_pred/1.0e3,Qfit[327,:],'b--')
+    plt.plot(t_pred/1.0e3,Q[327,:],'k')
+    plt.plot(t_pred/1.0e3,Qpred[327,:],'b--')
+    plt.plot(t_pred/1.0e3,Qfit[327,:],'r--')
     plt.grid(True)
     ax = plt.gca()
-    ax.set_xticklabels([])
-    plt.savefig('Bx_fit.png')
-    plt.savefig('Bx_fit.pdf')
-    plt.savefig('Bx_fit.eps')
-    plt.savefig('Bx_fit.svg')
+    #ax.set_xticklabels([])
+    plt.savefig('Pictures/Bx_fit.png')
+    plt.savefig('Pictures/Bx_fit.pdf')
+    plt.savefig('Pictures/Bx_fit.eps')
+    plt.savefig('Pictures/Bx_fit.svg')
 
 def make_table(sindy_model,feature_names):
     output_names = sindy_model.get_feature_names()
@@ -114,6 +119,8 @@ def update_manifold_movie(frame,x_pred,x_test_sim,time):
     plt.suptitle('t = {:0.2f} (ms)'.format(time[frame]/1.0e3),fontsize=20)
     ax1 = fig.add_subplot(121, projection='3d')
     ax1.plot(x_pred[0:frame,0],x_pred[0:frame,1],x_pred[0:frame,2], 'k')
+    ax1.scatter(x_pred[frame-1,0],x_pred[frame-1,1],x_pred[frame-1,2], \
+        color='k', marker='o')
     ax1.azim = frame/5.0
     ax1.elev = frame/9.0
     ax1.set_xlabel(r'$\varphi_1(t)$',fontsize=16)
@@ -132,6 +139,8 @@ def update_manifold_movie(frame,x_pred,x_test_sim,time):
     ax1.grid(True)
     ax2 = fig.add_subplot(122, projection='3d')
     ax2.plot(x_test_sim[0:frame,0],x_test_sim[0:frame,1],x_test_sim[0:frame,2], 'b--')
+    ax2.scatter(x_test_sim[frame-1,0],x_test_sim[frame-1,1],x_test_sim[frame-1,2], \
+        color='b', marker='o')
     ax2.azim = frame/5.0
     ax2.elev = frame/9.0
     #ax2.plot(x_test_sim_predict[:,0],x_test_sim_predict[:,1],x_test_sim_predict[:,2], 'r--')
@@ -150,12 +159,8 @@ def update_manifold_movie(frame,x_pred,x_test_sim,time):
     ax2.zaxis.labelpad=14
     ax2.grid(True)
 
-def make_contour_movie(frame,x,y,z,B,time):
+def make_contour_movie(x,y,z,B,B_sim,time,prefix):
     r = x**2+y**2
-    print(frame)
-    plt.clf()
-    plt.figure(237898234)
-    plt.title('t = {:0.2f} (ms)'.format(time[frame]))
     Z0 = np.isclose(z,np.ones(len(z))*min(abs(z)),rtol=1e-3,atol=1e-3)
     ind_Z0 = [i for i, p in enumerate(Z0) if p]
     ri = np.linspace(0,max(r[ind_Z0]),200)
@@ -163,10 +168,66 @@ def make_contour_movie(frame,x,y,z,B,time):
     ri,phii = np.meshgrid(ri,phii)
     xi = ri*np.cos(phii)
     yi = ri*np.sin(phii)
-    print(np.shape(xi),np.shape(B))
-    Bi = griddata((x[ind_Z0], y[ind_Z0]), B[ind_Z0,frame], (xi, yi), method='cubic')
-    print(np.shape(xi),np.shape(Bi))
-    plt.contourf(xi,yi,Bi,cmap='hot')
+    Bi = griddata((x[ind_Z0], y[ind_Z0]), B[ind_Z0,0], (xi, yi), method='cubic')
+    Bi_sim = griddata((x[ind_Z0], y[ind_Z0]), B_sim[ind_Z0,0], (xi, yi), method='cubic')
+    plt.clf()
+    fig = plt.figure(6,figsize=(10,7))
+    plt.suptitle('t = {:0.2f} (ms)'.format(time[0]))
+    plt.subplot(2,1,1)
+    plt.contourf(xi,yi,Bi,cmap='plasma')
     ax = plt.gca()
     ax.axis('off')
     plt.colorbar()
+    plt.subplot(2,1,2)
+    plt.contourf(xi,yi,Bi_sim,cmap='plasma')
+    ax = plt.gca()
+    ax.axis('off')
+    plt.colorbar()
+    ani = animation.FuncAnimation( \
+    fig, update_contour_movie, range(0,len(time),1), \
+    fargs=(x,y,z,B,B_sim,time,prefix),repeat=False, \
+    interval=100, blit=False)
+    FPS = 30
+    ani.save('Pictures/'+prefix+'_contour.mp4',fps=FPS,dpi=200)
+
+def update_contour_movie(frame,x,y,z,B,B_sim,time,prefix):
+    r = np.sqrt(x**2+y**2)
+    Z0 = np.isclose(z,np.ones(len(z))*min(abs(z)),rtol=1e-3,atol=1e-3)
+    ind_Z0 = [i for i, p in enumerate(Z0) if p]
+    ri = np.linspace(0,max(r[ind_Z0]),200)
+    phii = np.linspace(0,2*np.pi,64)
+    ri,phii = np.meshgrid(ri,phii)
+    xi = ri*np.cos(phii)
+    yi = ri*np.sin(phii)
+    Bi = griddata((x[ind_Z0], y[ind_Z0]), B[ind_Z0,frame], (xi, yi), method='cubic')
+    Bi_sim = griddata((x[ind_Z0], y[ind_Z0]), B_sim[ind_Z0,frame], (xi, yi), method='cubic')
+    print(frame)
+    plt.clf()
+    plt.figure(6,figsize=(10,7))
+    plt.suptitle('t = {:0.2f} (ms)'.format(time[frame]/1.0e3))
+    plt.subplot(2,1,1)
+    plt.title('Simulation test data')
+    if prefix[0]=='B':
+        plt.pcolor(xi,yi,Bi,cmap='plasma',vmin=-1e5,vmax=1e5)
+        cbar = plt.colorbar(ticks=[-1e5,-5e4,0,5e4,1e5],extend='both')
+        plt.clim(-1e5,1e5)
+    else:
+        plt.pcolor(xi,yi,Bi,cmap='plasma',vmin=-1e4,vmax=1e4)
+        cbar = plt.colorbar(ticks=[-1e4,-5e3,0,5e3,1e4],extend='both')
+        plt.clim(-1e4,1e4)
+    # To plot the measurement locations
+    #plt.scatter(x,y,s=2,c='k')
+    ax = plt.gca()
+    ax.axis('off')
+    plt.subplot(2,1,2)
+    plt.title('Identified model')
+    if prefix[0]=='B':
+        plt.pcolor(xi,yi,Bi_sim,cmap='plasma',vmin=-1e5,vmax=1e5)
+        cbar = plt.colorbar(ticks=[-1e5,-5e4,0,5e4,1e5],extend='both')
+        plt.clim(-1e5,1e5)
+    else:
+        plt.pcolor(xi,yi,Bi_sim,cmap='plasma',vmin=-1e4,vmax=1e4)
+        cbar = plt.colorbar(ticks=[-1e4,-5e3,0,5e3,1e4],extend='both')
+        plt.clim(-1e4,1e4)
+    ax = plt.gca()
+    ax.axis('off')
