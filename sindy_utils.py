@@ -179,7 +179,7 @@ def make_table(sindy_model,feature_names):
     ytable.set_fontsize(18)
     ytable.scale(1, 2)
     #fig.tight_layout()
-    plt.savefig('SINDy_table.pdf')
+    plt.savefig('Pictures/SINDy_table.pdf')
 
 def update_manifold_movie(frame,x_true,x_sim,t_test):
     """
