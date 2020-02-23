@@ -73,7 +73,7 @@ def compressible_Framework(inner_prod,time,poly_order,threshold,r):
     integrator_kws = {'full_output': True}
     x_train,output = model.simulate(x0_train,t_train, \
         integrator=odeint,stop_condition=None,full_output=True, \
-        rtol=1e-15,h0=1e-20,tcrit=[1702])
+        rtol=1e-15,h0=1e-20,tcrit=[2090])
     x_sim,output = model.simulate(x0_test,t_test, \
         integrator=odeint,stop_condition=None,full_output=True, \
         rtol=1e-15,h0=1e-20,tcrit=[2090]) #,hmax=1e-2,atol=1e-15) #h0=1e-20
