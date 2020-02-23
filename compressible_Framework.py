@@ -37,9 +37,25 @@ def compressible_Framework(inner_prod,time,poly_order,threshold,r):
     (1)
         Truncation number of the SVD
 
+    Returns
+    -------
+    t_test: numpy array of floats
+    (M_test = number of time samples in the test data region)
+        Time in microseconds in the test data region
+
+    x_true: 2D numpy array of floats
+    (M_test = number of time samples in the test data region,
+    r = truncation number of the SVD)
+        The true evolution of the temporal BOD modes
+
+    x_sim: 2D numpy array of floats
+    (M_test = number of time samples in the test data region,
+    r = truncation number of the SVD)
+        The model evolution of the temporal BOD modes
+
     """
     plot_energy(time,inner_prod)
-    x,feature_names = vector_POD(inner_prod)
+    x,feature_names,Vh = vector_POD(inner_prod,r)
     model = SINDy(optimizer=STLSQ(threshold=threshold), \
         feature_library=PolynomialLibrary(degree=poly_order), \
         differentiation_method=SmoothedFiniteDifference(drop_endpoints=True), \
@@ -83,7 +99,7 @@ def compressible_Framework(inner_prod,time,poly_order,threshold,r):
         x_true[:,i] = x_true[:,i]*sum(np.amax(abs(Vh),axis=1)[0:r])
     return t_test,x_true,x_sim
 
-def vector_POD(inner_prod):
+def vector_POD(inner_prod,r):
     """
     Performs the vector BOD, and scales the resulting modes
     to lie on the unit ball. Also returns the names of the
@@ -106,6 +122,12 @@ def vector_POD(inner_prod):
     (r = truncation number of the SVD)
         Names of the temporal BOD modes to be modeled
 
+    Vh: 2D numpy array of floats
+    (M = number of time samples, M = number of time samples)
+        The V* in the SVD, returned here because the SINDy modes
+        will need to be rescaled off of the unit ball to compare
+        with the original measurements
+
     """
     V,S,Vh = np.linalg.svd(inner_prod,full_matrices=False)
     plot_BOD_Espectrum(S)
@@ -119,4 +141,4 @@ def vector_POD(inner_prod):
         vh[i,:] = Vh[i,:]/sum(np.amax(abs(Vh),axis=1)[0:r])
         feature_names.append(r'$\varphi_{:d}$'.format(i+1))
     x = np.transpose(vh)
-    return x, feature_names
+    return x, feature_names, Vh

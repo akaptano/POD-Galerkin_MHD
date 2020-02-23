@@ -3,7 +3,7 @@ from numpy import pi
 mu0 = 4*pi*1e-7
 rho = 2.0e19*2*1.67*1e-27
 
-def load_mats(start,end,skip):
+def load_data(start,end,skip):
     """
     Performs the entire vector_POD + SINDy framework for a given polynomial
     order and thresholding for the SINDy method.
@@ -29,19 +29,19 @@ def load_mats(start,end,skip):
     Bx_mat: 2D numpy array of floats
     (n_samples = number of volume-sampled locations,
     M = number of time samples)
-        The mean-subtracted Bx
+        The mean-subtracted and dimensionalized Bx
         at every volume-sampled location
 
     By_mat: 2D numpy array of floats
     (n_samples = number of volume-sampled locations,
     M = number of time samples)
-        The mean-subtracted By
+        The mean-subtracted and dimensionalized By
         at every volume-sampled location
 
     Bz_mat: 2D numpy array of floats
     (n_samples = number of volume-sampled locations,
     M = number of time samples)
-        The mean-subtracted Bz
+        The mean-subtracted and dimensionalized Bz
         at every volume-sampled location
 
     Vx_mat: 2D numpy array of floats
