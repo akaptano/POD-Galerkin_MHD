@@ -30,8 +30,8 @@ def inner_product(Q,R):
     """
     Qr = np.zeros(np.shape(Q))
     for i in range(np.shape(Q)[1]):
-        Qr[:,i] = Q[:,i]*R
-    inner_prod = np.transpose(Q)@Qr
+        Qr[:,i] = Q[:,i]*np.sqrt(R)
+    inner_prod = np.transpose(Qr)@Qr
     return inner_prod
 
 def plot_energy(time,inner_prod):
@@ -75,7 +75,7 @@ def plot_energy(time,inner_prod):
 #     plt.figure(2000)
 #     plt.plot(time,np.diag(inner_prod))
 
-def plot_measurement(Qorig,Q,Qpred,Qfit,t_test):
+def plot_measurement(Qorig,Q,Q_true,Q_sim,t_test,r):
     """
     Plot a particular reconstructed Bx measurement
 
@@ -83,37 +83,83 @@ def plot_measurement(Qorig,Q,Qpred,Qfit,t_test):
     ----------
 
     """
-    # do nothing for now
+    Qorig = Qorig/1e3
+    Q = Q/1e3
+    Q_true = Q_true/1e3
+    Q_sim = Q_sim/1e3
     print(np.shape(Q))
-    plt.figure(324353400)
-    plt.subplot(4,1,1)
-    plt.plot(t_test/1.0e3,Qorig[324,:],'m--')
-    plt.plot(t_test/1.0e3,Q[324,:],'k')
-    plt.plot(t_test/1.0e3,Qpred[324,:],'b--')
-    plt.plot(t_test/1.0e3,Qfit[324,:],'r--')
+    plt.figure(324353400,figsize=(10,14))
+    plt.suptitle('Probe measurement at \n(R,$\phi$,Z)=(0.034,0.81,-0.051)',fontsize=30)
+    plt.subplot(6,1,1)
+    plt.plot(t_test/1.0e3,Qorig[324,:],'k',label='True')
+    #plt.plot(t_test/1.0e3,Q[324,:],'m--')
+    plt.plot(t_test/1.0e3,Q_true[324,:],'g--',label='True, r='+str(r))
+    plt.plot(t_test/1.0e3,Q_sim[324,:],'m--',label='Model, r='+str(r))
+    plt.grid(True)
+    plt.ylim(-220,220)
+    plt.legend(fontsize=22,loc='upper right')
+    ax = plt.gca()
+    ax.set_yticks([-200,0,200])
+    ax.set_xticklabels([])
+    ax.tick_params(axis='both', which='major', labelsize=24)
+    ax.tick_params(axis='both', which='minor', labelsize=24)
+    plt.subplot(6,1,2)
+    plt.plot(t_test/1.0e3,Qorig[324+1*28736,:],'k',label=r'True $B_y$')
+    #plt.plot(t_test/1.0e3,Q[327,:],'m--')
+    plt.plot(t_test/1.0e3,Q_true[324+1*28736,:],'g--',label=r'True $B_y$ with r='+str(r)+' truncation')
+    plt.plot(t_test/1.0e3,Q_sim[324+1*28736,:],'m--',label=r'Model $B_y$ with r='+str(r)+' truncation')
+    plt.grid(True)
+    plt.ylim(-270,270)
+    ax = plt.gca()
+    ax.set_yticks([-250,0,250])
+    ax.set_xticklabels([])
+    ax.tick_params(axis='both', which='major', labelsize=24)
+    ax.tick_params(axis='both', which='minor', labelsize=24)
+    plt.subplot(6,1,3)
+    plt.plot(t_test/1.0e3,Qorig[324+2*28736,:],'k',label=r'True $B_z$')
+    #plt.plot(t_test/1.0e3,Q[327,:],'m--')
+    plt.plot(t_test/1.0e3,Q_true[324+2*28736,:],'g--',label=r'True $B_z$ with r='+str(r)+' truncation')
+    plt.plot(t_test/1.0e3,Q_sim[324+2*28736,:],'m--',label=r'Model $B_z$ with r='+str(r)+' truncation')
+    plt.grid(True)
+    plt.ylim(-150,150)
+    ax = plt.gca()
+    ax.set_yticks([-120,0,120])
+    ax.set_xticklabels([])
+    ax.tick_params(axis='both', which='major', labelsize=24)
+    ax.tick_params(axis='both', which='minor', labelsize=24)
+    plt.subplot(6,1,4)
+    plt.plot(t_test/1.0e3,Qorig[324+3*28736,:],'k',label=r'True $V_x$')
+    #plt.plot(t_test/1.0e3,Q[327,:],'m--')
+    plt.plot(t_test/1.0e3,Q_true[324+3*28736,:],'g--',label=r'True $V_x$ with r='+str(r)+' truncation')
+    plt.plot(t_test/1.0e3,Q_sim[324+3*28736,:],'m--',label=r'Model $V_x$ with r='+str(r)+' truncation')
     plt.grid(True)
     ax = plt.gca()
     ax.set_xticklabels([])
-    plt.subplot(4,1,2)
-    plt.plot(t_test/1.0e3,Q[325,:],'k')
-    plt.plot(t_test/1.0e3,Qpred[325,:],'b--')
-    plt.plot(t_test/1.0e3,Qfit[325,:],'r--')
+    ax.tick_params(axis='both', which='major', labelsize=24)
+    ax.tick_params(axis='both', which='minor', labelsize=24)
+    plt.subplot(6,1,5)
+    plt.plot(t_test/1.0e3,Qorig[324+4*28736,:],'k',label=r'True $V_y$')
+    #plt.plot(t_test/1.0e3,Q[327,:],'m--')
+    plt.plot(t_test/1.0e3,Q_true[324+4*28736,:],'g--',label=r'True $V_y$ with r='+str(r)+' truncation')
+    plt.plot(t_test/1.0e3,Q_sim[324+4*28736,:],'m--',label=r'Model $V_y$ with r='+str(r)+' truncation')
     plt.grid(True)
+    plt.ylim(-12,12)
     ax = plt.gca()
+    ax.set_yticks([-10,0,10])
     ax.set_xticklabels([])
-    plt.subplot(4,1,3)
-    plt.plot(t_test/1.0e3,Q[326,:],'k')
-    plt.plot(t_test/1.0e3,Qpred[326,:],'b--')
-    plt.plot(t_test/1.0e3,Qfit[326,:],'r--')
+    ax.tick_params(axis='both', which='major', labelsize=24)
+    ax.tick_params(axis='both', which='minor', labelsize=24)
+    plt.subplot(6,1,6)
+    plt.plot(t_test/1.0e3,Qorig[324+5*28736,:],'k',label=r'True $V_z$')
+    #plt.plot(t_test/1.0e3,Q[327,:],'m--')
+    plt.plot(t_test/1.0e3,Q_true[324+5*28736,:],'g--',label=r'True $V_z$ with r='+str(r)+' truncation')
+    plt.plot(t_test/1.0e3,Q_sim[324+5*28736,:],'m--',label=r'Model $V_z$ with r='+str(r)+' truncation')
     plt.grid(True)
+    plt.ylim(-8,8)
     ax = plt.gca()
-    ax.set_xticklabels([])
-    plt.subplot(4,1,4)
-    plt.plot(t_test/1.0e3,Q[327,:],'k')
-    plt.plot(t_test/1.0e3,Qpred[327,:],'b--')
-    plt.plot(t_test/1.0e3,Qfit[327,:],'r--')
-    plt.grid(True)
-    ax = plt.gca()
+    ax.set_yticks([-5,0,5])
+    ax.tick_params(axis='both', which='major', labelsize=24)
+    ax.tick_params(axis='both', which='minor', labelsize=24)
     #ax.set_xticklabels([])
     plt.savefig('Pictures/Bx_fit.png')
     plt.savefig('Pictures/Bx_fit.pdf')
@@ -476,6 +522,7 @@ def make_contour_movie(X,Y,Z,B_true,B_sim,t_test,prefix):
     ri,phii = np.meshgrid(ri,phii)
     xi = ri*np.cos(phii)
     yi = ri*np.sin(phii)
+    print(np.shape(X[ind_Z0]),np.shape(xi),np.shape(ri))
     Bi = griddata((X[ind_Z0], Y[ind_Z0]), B_true[ind_Z0,0], (xi, yi), method='cubic')
     Bi_sim = griddata((X[ind_Z0], Y[ind_Z0]), B_sim[ind_Z0,0], (xi, yi), method='cubic')
     plt.clf()

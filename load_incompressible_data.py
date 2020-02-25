@@ -119,7 +119,7 @@ def load_data(start,end,skip):
     Bx_mat = np.transpose(Bx_mat)
     By_mat = np.transpose(By_mat)
     Bz_mat = np.transpose(Bz_mat)
-    Vx_mat = np.transpose(Vz_mat)
+    Vx_mat = np.transpose(Vx_mat)
     Vy_mat = np.transpose(Vy_mat)
     Vz_mat = np.transpose(Vz_mat)
     return Bx_mat,By_mat,Bz_mat,Vx_mat,Vy_mat,Vz_mat
