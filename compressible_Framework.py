@@ -92,7 +92,7 @@ def compressible_Framework(Q,inner_prod,time,poly_order,threshold,r):
     print('Model score: %f' % model.score(x, t=time))
     make_evo_plots(x_dot,x_dot_train, \
         x_dot_sim,x_true,x_sim,time,t_train,t_test)
-    #make_3d_plots(x_true,x_sim,t_test)
+    make_3d_plots(x_true,x_sim,t_test)
     make_table(model,feature_names)
     # now attempt a pareto curve
     #print('performing Pareto analysis')
