@@ -1,17 +1,18 @@
 import numpy as np
 from pysindy import SINDy
-from pysindy.optimizers import STLSQ
-from pysindy.feature_library import PolynomialLibrary
+from pysindy.optimizers import STLSQ, SR3, SR3Enhanced
+from pysindy.feature_library import PolynomialLibrary,CustomLibrary
 from pysindy.differentiation import FiniteDifference,SmoothedFiniteDifference
-from sindy_utils import plot_energy, make_table, \
+from sindy_utils import make_table, \
     plot_BOD_Espectrum, make_evo_plots, \
-    make_3d_plots, plot_BOD_Fspectrum
+    make_3d_plots, plot_BOD_Fspectrum,plot_pod_temporal_modes
 from pysindy.utils.pareto import pareto_curve
 from scipy.integrate import odeint
 from scipy.linalg import eig
 from matplotlib import pyplot as plt
+from numpy.random import random
 
-def compressible_Framework(Q,inner_prod,time,poly_order,threshold,r):
+def compressible_Framework(Q,inner_prod,time,poly_order,threshold,r,tfac):
     """
     Performs the entire vector_POD + SINDy framework for a given polynomial
     order and thresholding for the SINDy method.
@@ -39,6 +40,10 @@ def compressible_Framework(Q,inner_prod,time,poly_order,threshold,r):
     (1)
         Truncation number of the SVD
 
+    tfac: float
+    (1)
+        Fraction of the data to treat as training data
+
     Returns
     -------
     t_test: numpy array of floats
@@ -56,44 +61,116 @@ def compressible_Framework(Q,inner_prod,time,poly_order,threshold,r):
         The model evolution of the temporal BOD modes
 
     """
-    plot_energy(time,inner_prod)
-    x,feature_names,S2,Vh, = vector_POD(inner_prod,r)
+    M_train = int(len(time)*tfac)
+    t_train = time[:M_train]
+    t_test = time[M_train:]
+    x,feature_names,S2,Vh, = vector_POD(inner_prod,t_train,r)
     #for i in range(r):
     #    x[:,i] = x[:,i]*sum(np.amax(abs(Vh),axis=1)[0:r])
     #S = np.sqrt(S2[0:r,0:r])
     #U_true = Q@x@np.linalg.inv(S)
     #Q_true = U_true[:,0:r]@S@np.transpose(x)
     print('Now fitting SINDy model')
-    model = SINDy(optimizer=STLSQ(threshold=threshold), \
-        feature_library=PolynomialLibrary(degree=poly_order), \
-        differentiation_method=SmoothedFiniteDifference(drop_endpoints=True), \
+    if poly_order == 2:
+        library_functions = [lambda x : x, lambda x,y : x*y, lambda x : x**2]
+        library_function_names = [lambda x : x, lambda x,y : x+y, lambda x : x+x]
+    if poly_order == 3:
+        library_functions = [lambda x : x, lambda x,y : x*y, lambda x : x**2, lambda x,y,z: x*y*z, lambda x,y: x**2*y, lambda x,y: x*y**2, lambda x: x**3]
+        library_function_names = [lambda x : x, lambda x,y : x+y, lambda x : x+x, lambda x,y,z: x+y+z, lambda x,y: x+x+y, lambda x,y: x+y+y, lambda x: x+x+x]
+    if poly_order == 4:
+        library_functions = [lambda x : x, lambda x,y : x*y, lambda x : x**2, lambda x,y,z: x*y*z, lambda x,y: x**2*y, lambda x,y: x*y**2, lambda x: x**3, lambda x,y,z,w: x*y*z*w, lambda x,y,z: x*y*z**2, lambda x,y: x**2*y**2, lambda x,y: x**3*y, lambda x: x**4]
+        library_function_names = [lambda x : x, lambda x,y : x+y, lambda x : x+x, lambda x,y,z: x+y+z, lambda x,y: x+x+y, lambda x,y: x+y+y, lambda x: x+x+x, lambda x,y,z,w: x+y+z+w, lambda x,y,z: x+y+z+z, lambda x,y: x+x+y+y, lambda x,y: x+x+x+y, lambda x: x+x+x+x]
+    sindy_library = CustomLibrary(library_functions=library_functions, \
+        function_names=library_function_names)
+    #print(library_function_names,feature_names)
+    #sindy_library = PolynomialLibrary(degree=poly_order)
+    #if r == 3:
+    #    constraint_matrix = np.zeros((6,27))
+        # constraints from vanishing diagonal
+    #    constraint_matrix[0,0] = 1.0
+    #    constraint_matrix[1,4] = 1.0
+    #    constraint_matrix[2,8] = 1.0
+
+        #constraint_matrix[0,1] = 1.0
+        #constraint_matrix[0,3] = 1.0
+        # constraints from anti-symmetry
+    #    constraint_matrix[3,1] = 1.0
+    #    constraint_matrix[3,3] = 1.0
+    #    constraint_matrix[4,2] = 1.0
+    #    constraint_matrix[4,6] = 1.0
+    #    constraint_matrix[5,5] = 1.0
+    #    constraint_matrix[5,7] = 1.0
+    #    constraint_zeros = np.zeros(6)
+    #    print(constraint_matrix)
+    #else:
+        # number of constraints is N*(N+1)/2
+    #    constraint_matrix = np.zeros((6*13,int(r*(r**2+3*r)/2)))
+    #    constraint_zeros = np.zeros(6*13)
+    if poly_order == 2:
+        constraint_matrix = np.zeros((int(r*(r+1)/2),int(r*(r**2+3*r)/2)))
+    if poly_order == 3:
+        #constraint_matrix = np.zeros((int(r*(r+1)/2),int(r*(r**2+3*r)/2)+336))
+        constraint_matrix = np.zeros((int(r*(r+1)/2),int(r*(r**2+3*r)/2)+30))
+    if poly_order == 4:
+        constraint_matrix = np.zeros((int(r*(r+1)/2),int(r*(r**2+3*r)/2)+60))
+    constraint_zeros = np.zeros(int(r*(r+1)/2))
+    for i in range(r):
+        constraint_matrix[i,i*(r+1)] = 1.0
+    q = r
+    for i in range(r):
+        counter = 1
+        for j in range(i+1,r):
+            constraint_matrix[q,i*r+j] = 1.0
+            constraint_matrix[q,i*r+j+counter*(r-1)] = 1.0
+            counter = counter + 1
+            q = q + 1
+    print(constraint_matrix)
+    #sindy_opt = STLSQ(threshold=threshold)
+    #sindy_opt = SR3(threshold=threshold, nu=1, max_iter=1000,tol=1e-8)
+    sindy_opt = SR3Enhanced(threshold=threshold, nu=1, max_iter=1000, \
+        constraint_lhs=constraint_matrix,constraint_rhs=constraint_zeros, \
+        tol=1e-15,thresholder='l0')
+    model = SINDy(optimizer=sindy_opt, \
+        feature_library=sindy_library, \
+        differentiation_method=FiniteDifference(drop_endpoints=True), \
         feature_names=feature_names)
-    tfac = 3.0/5.0
-    M_train = int(len(time)*tfac)
-    t_train = time[:M_train]
     x_train = x[:M_train,:]
     x0_train = x[0,:]
-    t_test = time[M_train:]
     x_true = x[M_train:,:]
     x0_test = x[M_train,:]
-    model.fit(x_train, t=t_train)
-    model.print()
+    model.fit(x_train, t=t_train, unbias=False)
+    t_cycle = np.linspace(time[M_train],time[M_train]*1.3,int(len(time)/2.0))
+    #model.print()
     print(model.coefficients())
+    #print(np.ravel(model.coefficients()))
+    #print(model.get_feature_names())
+    #print(sindy_opt.history_)
+    print(sindy_opt.coef_)
+    print(sindy_opt.coef_full_)
+    #print(sindy_opt.coef_/sindy_opt.coef_full_)
     integrator_kws = {'full_output': True}
     #x_train,output = model.simulate(x0_train,t_train, \
     #    integrator=odeint,stop_condition=None,full_output=True, \
     #    rtol=1e-15,h0=1e-20,tcrit=[2090])
     x_sim,output = model.simulate(x0_test,t_test, \
         integrator=odeint,stop_condition=None,full_output=True, \
-        rtol=1e-15,h0=1e-20,tcrit=[2090]) #,hmax=1e-2,atol=1e-15) #h0=1e-20
+        rtol=1e-20,h0=1e-5) #h0=1e-20
+    x_sim1,output = model.simulate(-0.4*np.ones(r),t_cycle, \
+        integrator=odeint,stop_condition=None,full_output=True, \
+        rtol=1e-20,h0=1e-5)
+    x_sim2,output = model.simulate(0.15*np.ones(r),t_cycle, \
+        integrator=odeint,stop_condition=None,full_output=True, \
+        rtol=1e-20,h0=1e-5)
     x_dot = model.differentiate(x, t=time)
     x_dot_train = model.predict(x_train)
     x_dot_sim = model.predict(x_true)
     print('Model score: %f' % model.score(x, t=time))
     make_evo_plots(x_dot,x_dot_train, \
         x_dot_sim,x_true,x_sim,time,t_train,t_test)
-    make_3d_plots(x_true,x_sim,t_test)
-    make_table(model,feature_names)
+    make_table(model,feature_names,r)
+    #make_3d_plots(x_true,x_sim,t_test,'sim')
+    #make_3d_plots(x_sim1,x_sim2,t_cycle,'limitcycle')
+    #plt.show()
     # now attempt a pareto curve
     #print('performing Pareto analysis')
     #poly_order = [poly_order]
@@ -108,7 +185,7 @@ def compressible_Framework(Q,inner_prod,time,poly_order,threshold,r):
         x_true[:,i] = x_true[:,i]*sum(np.amax(abs(Vh),axis=1)[0:r])
     return t_test,x_true,x_sim,S2
 
-def vector_POD(inner_prod,r):
+def vector_POD(inner_prod,t_train,r):
     """
     Performs the vector BOD, and scales the resulting modes
     to lie on the unit ball. Also returns the names of the
@@ -144,6 +221,7 @@ def vector_POD(inner_prod,r):
     S2 = S2[idx]
     v = v[:,idx]
     Vh = np.transpose(v)
+    plot_pod_temporal_modes(v[:len(t_train),:],t_train)
     plot_BOD_Espectrum(S2)
     print("% field in first r modes = ",sum(np.sqrt(S2[0:r]))/sum(np.sqrt(S2)))
     print("% energy in first r modes = ",sum(S2[0:r])/sum(S2))
@@ -152,7 +230,7 @@ def vector_POD(inner_prod,r):
     feature_names = []
     # normalize the modes
     for i in range(r):
-        #vh[i,:] = Vh[i,:]*S[i]**2/sum(S[0:r]**2*np.amax(abs(Vh),axis=1)[0:r])
+        #vh[i,:] = Vh[i,:]/sum(S[0:r]**2*np.amax(abs(Vh),axis=1)[0:r])
         vh[i,:] = Vh[i,:]/sum(np.amax(abs(Vh),axis=1)[0:r])
         feature_names.append(r'$\varphi_{:d}$'.format(i+1))
     x = np.transpose(vh)

@@ -3,7 +3,7 @@ from numpy import pi
 mu0 = 4*pi*1e-7
 rho = 2.0e19*2*1.67*1e-27
 
-def load_data(start,end,skip):
+def load_data(start,end,skip,path_plus_prefix):
     """
     Performs the entire vector_POD + SINDy framework for a given polynomial
     order and thresholding for the SINDy method.
@@ -74,19 +74,19 @@ def load_data(start,end,skip):
             print(i)
         if i < 10:
             Bx, By, Bz, Vx, Vy, Vz = \
-                np.loadtxt('../HITSI_rMHD_HR_0000'+str(i)+'.csv',delimiter=',',usecols=(3,4,5,15,16,17),unpack=True)
+                np.loadtxt(path_plus_prefix+'_0000'+str(i)+'.csv',delimiter=',',usecols=(3,4,5,15,16,17),unpack=True)
         elif i < 100:
             Bx, By, Bz, Vx, Vy, Vz = \
-                np.loadtxt('../HITSI_rMHD_HR_000'+str(i)+'.csv',delimiter=',',usecols=(3,4,5,15,16,17),unpack=True)
+                np.loadtxt(path_plus_prefix+'_000'+str(i)+'.csv',delimiter=',',usecols=(3,4,5,15,16,17),unpack=True)
         elif i < 1000:
             Bx, By, Bz, Vx, Vy, Vz = \
-                np.loadtxt('../HITSI_rMHD_HR_00'+str(i)+'.csv',delimiter=',',usecols=(3,4,5,15,16,17),unpack=True)
+                np.loadtxt(path_plus_prefix+'_00'+str(i)+'.csv',delimiter=',',usecols=(3,4,5,15,16,17),unpack=True)
         elif i < 10000:
             Bx, By, Bz, Vx, Vy, Vz = \
-                np.loadtxt('../HITSI_rMHD_HR_0'+str(i)+'.csv',delimiter=',',usecols=(3,4,5,15,16,17),unpack=True)
+                np.loadtxt(path_plus_prefix+'_0'+str(i)+'.csv',delimiter=',',usecols=(3,4,5,15,16,17),unpack=True)
         else:
             Bx, By, Bz, Vx, Vy, Vz = \
-                np.loadtxt('../HITSI_rMHD_HR_'+str(i)+'.csv',delimiter=',',usecols=(3,4,5,15,16,17),unpack=True)
+                np.loadtxt(path_plus_prefix+'_'+str(i)+'.csv',delimiter=',',usecols=(3,4,5,15,16,17),unpack=True)
         Bx_mat.append(Bx)
         By_mat.append(By)
         Bz_mat.append(Bz)
@@ -96,13 +96,13 @@ def load_data(start,end,skip):
     Bx_mat = np.array(Bx_mat)
     By_mat = np.array(By_mat)
     Bz_mat = np.array(Bz_mat)
-    Vx_mat = np.array(Vx_mat)
-    Vy_mat = np.array(Vy_mat)
-    Vz_mat = np.array(Vz_mat)
-    #scale to Va
-    Bx_mat = Bx_mat/np.sqrt(mu0*rho)
-    By_mat = By_mat/np.sqrt(mu0*rho)
-    Bz_mat = Bz_mat/np.sqrt(mu0*rho)
+    #scale to Bv
+    Vx_mat = np.sqrt(mu0*rho)*np.array(Vx_mat)
+    Vy_mat = np.sqrt(mu0*rho)*np.array(Vy_mat)
+    Vz_mat = np.sqrt(mu0*rho)*np.array(Vz_mat)
+    Bx_mat = Bx_mat
+    By_mat = By_mat
+    Bz_mat = Bz_mat
     bx_avg = np.mean(Bx_mat,0)
     by_avg = np.mean(By_mat,0)
     bz_avg = np.mean(Bz_mat,0)
