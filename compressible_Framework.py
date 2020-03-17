@@ -71,6 +71,9 @@ def compressible_Framework(Q,inner_prod,time,poly_order,threshold,r,tfac):
     #U_true = Q@x@np.linalg.inv(S)
     #Q_true = U_true[:,0:r]@S@np.transpose(x)
     print('Now fitting SINDy model')
+    if poly_order == 1:
+        library_functions = [lambda x : x]
+        library_function_names = [lambda x : x]
     if poly_order == 2:
         library_functions = [lambda x : x, lambda x,y : x*y, lambda x : x**2]
         library_function_names = [lambda x : x, lambda x,y : x+y, lambda x : x+x]
@@ -106,24 +109,37 @@ def compressible_Framework(Q,inner_prod,time,poly_order,threshold,r,tfac):
         # number of constraints is N*(N+1)/2
     #    constraint_matrix = np.zeros((6*13,int(r*(r**2+3*r)/2)))
     #    constraint_zeros = np.zeros(6*13)
-    if poly_order == 2:
-        constraint_matrix = np.zeros((int(r*(r+1)/2),int(r*(r**2+3*r)/2)))
-    if poly_order == 3:
-        #constraint_matrix = np.zeros((int(r*(r+1)/2),int(r*(r**2+3*r)/2)+336))
-        constraint_matrix = np.zeros((int(r*(r+1)/2),int(r*(r**2+3*r)/2)+30))
-    if poly_order == 4:
-        constraint_matrix = np.zeros((int(r*(r+1)/2),int(r*(r**2+3*r)/2)+60))
     constraint_zeros = np.zeros(int(r*(r+1)/2))
-    for i in range(r):
-        constraint_matrix[i,i*(r+1)] = 1.0
-    q = r
-    for i in range(r):
-        counter = 1
-        for j in range(i+1,r):
-            constraint_matrix[q,i*r+j] = 1.0
-            constraint_matrix[q,i*r+j+counter*(r-1)] = 1.0
-            counter = counter + 1
-            q = q + 1
+    if poly_order == 1:
+        constraint_matrix = np.zeros((int(r*(r+1)/2),r**2))
+        for i in range(r):
+            constraint_matrix[i,i*(r+1)] = 1.0
+        q = r
+        for i in range(r):
+            counter = 1
+            for j in range(i+1,r):
+                constraint_matrix[q,i*r+j] = 1.0
+                constraint_matrix[q,i*r+j+counter*(r-1)] = 1.0
+                counter = counter + 1
+                q = q + 1
+    else:
+        if poly_order == 2:
+            constraint_matrix = np.zeros((int(r*(r+1)/2),int(r*(r**2+3*r)/2)))
+        if poly_order == 3:
+            #constraint_matrix = np.zeros((int(r*(r+1)/2),int(r*(r**2+3*r)/2)+336))
+            constraint_matrix = np.zeros((int(r*(r+1)/2),int(r*(r**2+3*r)/2)+30))
+        if poly_order == 4:
+            constraint_matrix = np.zeros((int(r*(r+1)/2),int(r*(r**2+3*r)/2)+60))
+        for i in range(r):
+            constraint_matrix[i,i*(r+1)] = 1.0
+        q = r
+        for i in range(r):
+            counter = 1
+            for j in range(i+1,r):
+                constraint_matrix[q,i*r+j] = 1.0
+                constraint_matrix[q,i*r+j+counter*(r-1)] = 1.0
+                counter = counter + 1
+                q = q + 1
     print(constraint_matrix)
     #sindy_opt = STLSQ(threshold=threshold)
     #sindy_opt = SR3(threshold=threshold, nu=1, max_iter=1000,tol=1e-8)
@@ -168,8 +184,9 @@ def compressible_Framework(Q,inner_prod,time,poly_order,threshold,r,tfac):
     make_evo_plots(x_dot,x_dot_train, \
         x_dot_sim,x_true,x_sim,time,t_train,t_test)
     make_table(model,feature_names,r)
-    #make_3d_plots(x_true,x_sim,t_test,'sim')
-    #make_3d_plots(x_sim1,x_sim2,t_cycle,'limitcycle')
+    exit()
+    make_3d_plots(x_true,x_sim,t_test,'sim')
+    make_3d_plots(x_sim1,x_sim2,t_cycle,'limitcycle')
     #plt.show()
     # now attempt a pareto curve
     #print('performing Pareto analysis')

@@ -4,6 +4,7 @@ import pandas as pd
 from scipy.interpolate import griddata
 import matplotlib.animation as animation
 from mpl_toolkits.mplot3d import Axes3D
+from nfft import nfft
 
 def inner_product(Q,R):
     """
@@ -836,7 +837,11 @@ def make_evo_plots(x_dot,x_dot_train, \
         Time in microseconds in the test data region
 
     """
-    fig, axs = plt.subplots(x_true.shape[1], 1, sharex=True, figsize=(7,9))
+    r = x_true.shape[1]
+    fig, axs = plt.subplots(r, 1, sharex=True, figsize=(7,9))
+    if r==12:
+        fig, axs = plt.subplots(int(r/2), 2, figsize=(12,9))
+        axs = np.ravel(axs)
     for i in range(x_true.shape[1]):
         axs[i].plot(time/1.0e3, x_dot[:,i], 'k',linewidth=3, label='numerical derivative')
         axs[i].plot(t_train/1.0e3, x_dot_train[:,i], 'r',linewidth=3, label='model prediction')
@@ -844,7 +849,10 @@ def make_evo_plots(x_dot,x_dot_train, \
         #axs[i].set_yticklabels([])
         axs[i].grid(True)
     plt.savefig('Pictures/xdot.pdf')
-    fig, axs = plt.subplots(x_true.shape[1], 1, sharex=True, figsize=(7,9))
+    fig, axs = plt.subplots(r, 1, sharex=True, figsize=(7,9))
+    if r==12:
+        fig, axs = plt.subplots(int(r/2), 2, figsize=(12,9))
+        axs = np.ravel(axs)
     for i in range(x_true.shape[1]):
         axs[i].plot(t_test/1.0e3, x_true[:,i], 'k',linewidth=3, label='true simulation')
         axs[i].plot(t_test/1.0e3, x_sim[:,i], 'b',linewidth=3, label='model forecast')
@@ -1093,90 +1101,131 @@ def plot_pod_temporal_modes(x,time):
     plt.savefig('Pictures/temporal_modes.png')
     # Now plot the fourier transforms
     print(np.shape(x))
-    fftx = np.fft.rfft(x,axis=0)
-    freq = 1e3*np.linspace(0,1.0/(time[-1]),int(len(time)/2)+1)
+    #time = time/1.0e3
+    OldRange = (time[-1] - time[0])
+    NewRange = (0.5 - (-0.5))
+    normalized_time = (((time - time[0]) * NewRange) / OldRange) - 0.5
+    #normalized_time = time/np.max(time)-1.5*time[0]/np.max(time)
+    fftx = []
+    for i in range(8):
+        fftx.append(nfft(normalized_time,x[:,i])/float(len(time)))
+    #fftx = np.fft.fft(x,axis=0)/len(time)
+    #freq = 1e-3*np.fft.fftfreq(len(time),(time[1]-time[0]))
+    freq = -1.0e3/time[int(len(time)/2.0)]*np.ones(len(time)) + 1.0e3/time
+    freq = freq*2
+    #freq = -1.0e3/time[int(len(time)/2.0)-23]*np.ones(len(time)) + 1.0e3/time
+    print(1.0/time-np.mean(1.0/time),np.abs(1.0/time-np.mean(1.0/time)).argmin())
+    #np.hstack((np.flip(1.0e3/time[:int(len(time)/2)]), -1.0e3/time[:int(len(time)/2)])) #/len(time)
+    #freq = np.hstack((np.flip(1.0e3/time[:int(len(time)/2)]), -1.0e3/time[:int(len(time)/2)])) #/len(time)
+    #freq = 1.0/time
+    fftx = np.array(fftx).T
+    print(np.shape(fftx),np.shape(fftx[0]),fftx[:,0])
+    #if len(time) % 2 == 0:
+    #    fftx = fftx[:int(len(time)/2.0),:]
+    #    freq = freq[:int(len(time)/2.0)]
+    #else:
+    #    fftx = fftx[:int((len(time)-1)/2.0),:]
+    #    freq = freq[:int((len(time)-1)/2.0)]
+    #vals = np.arange(int(len(time)/2)+1)
+    #tperiod = len(time)/(time[-1]-time[-2])
+    #freq = 1e3*vals/tperiod
+    #freq = 1e3*np.linspace(0,int(len(time)/2)/(time[-1]-time[-2]),int(len(time)/2)+1)
     print(np.shape(fftx),np.shape(freq),freq,time)
     plt.figure(figsize=(14,10))
     plt.subplot(4,2,1)
-    plt.plot(freq,fftx[:,0].real,'b',linewidth=3)
-    plt.plot(freq,fftx[:,0].imag,'r',linewidth=3)
+    #plt.plot(freq,fftx[:,0].real,'b',linewidth=3)
+    #plt.plot(freq,fftx[:,0].imag,'r',linewidth=3)
+    plt.plot(freq,abs(fftx[:,0]),'k',linewidth=3) 
     leg = plt.legend([r'$\tilde{\varphi}_1$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False)
     ax = plt.gca()
     ax.set_xticklabels([])
     ax.set_yticklabels([])
-    plt.xlim(0,60)
+    plt.xlim(0,80)
     plt.subplot(4,2,2)
-    plt.plot(freq,fftx[:,1].real,'b',linewidth=3)
-    plt.plot(freq,fftx[:,1].imag,'r',linewidth=3)
+    #plt.plot(freq,fftx[:,1].real,'b',linewidth=3)
+    #plt.plot(freq,fftx[:,1].imag,'r',linewidth=3)
+    plt.plot(freq,abs(fftx[:,1]),'k',linewidth=3) 
     leg = plt.legend([r'$\tilde{\varphi}_2$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False)
     ax = plt.gca()
     ax.set_xticklabels([])
     ax.set_yticklabels([])
-    plt.xlim(0,60)
+    plt.xlim(0,80)
     plt.subplot(4,2,3)
-    plt.plot(freq,fftx[:,2].real,'b',linewidth=3)
-    plt.plot(freq,fftx[:,2].imag,'r',linewidth=3)
+    #plt.plot(freq,fftx[:,2].real,'b',linewidth=3)
+    #plt.plot(freq,fftx[:,2].imag,'r',linewidth=3)
+    plt.plot(freq,abs(fftx[:,2]),'k',linewidth=3) 
     leg = plt.legend([r'$\tilde{\varphi}_3$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False)
     ax = plt.gca()
     ax.set_xticklabels([])
     ax.set_yticklabels([])
-    plt.xlim(0,60)
+    plt.xlim(0,80)
     plt.subplot(4,2,4)
-    plt.plot(freq,fftx[:,3].real,'b',linewidth=3)
-    plt.plot(freq,fftx[:,3].imag,'r',linewidth=3) 
+    #plt.plot(freq,fftx[:,3].real,'b',linewidth=3)
+    #plt.plot(freq,fftx[:,3].imag,'r',linewidth=3) 
+    plt.plot(freq,abs(fftx[:,3]),'k',linewidth=3) 
     leg = plt.legend([r'$\tilde{\varphi}_4$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False)
     ax = plt.gca()
     ax.set_xticklabels([])
     ax.set_yticklabels([])
-    plt.xlim(0,60)
+    plt.xlim(0,80)
     plt.subplot(4,2,5)
-    plt.plot(freq,fftx[:,4].real,'b',linewidth=3)
-    plt.plot(freq,fftx[:,4].imag,'r',linewidth=3) 
+    #plt.plot(freq,fftx[:,4].real,'b',linewidth=3)
+    #plt.plot(freq,fftx[:,4].imag,'r',linewidth=3) 
+    plt.plot(freq,abs(fftx[:,4]),'k',linewidth=3) 
     leg = plt.legend([r'$\tilde{\varphi}_5$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False)
     ax = plt.gca()
     ax.set_xticklabels([])
     ax.set_yticklabels([])
-    plt.xlim(0,60)
+    plt.xlim(0,80)
     plt.subplot(4,2,6)
-    plt.plot(freq,fftx[:,5].real,'b',linewidth=3)
-    plt.plot(freq,fftx[:,5].imag,'r',linewidth=3) 
+    #plt.plot(freq,fftx[:,5].real,'b',linewidth=3)
+    #plt.plot(freq,fftx[:,5].imag,'r',linewidth=3) 
+    plt.plot(freq,abs(fftx[:,5]),'k',linewidth=3) 
     leg = plt.legend([r'$\tilde{\varphi}_6$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False)
     ax = plt.gca()
     ax.set_xticklabels([])
     ax.set_yticklabels([])
-    plt.xlim(0,60)
+    plt.xlim(0,80)
     plt.subplot(4,2,7)
-    plt.plot(freq,fftx[:,6].real,'b',linewidth=3)
-    plt.plot(freq,fftx[:,6].imag,'r',linewidth=3) 
+    #plt.plot(freq,fftx[:,6].real,'b',linewidth=3)
+    #plt.plot(freq,fftx[:,6].imag,'r',linewidth=3) 
+    plt.plot(freq,abs(fftx[:,6]),'k',linewidth=3) 
     leg = plt.legend([r'$\tilde{\varphi}_7$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False)
     ax = plt.gca()
     #ax.set_xticklabels([])
     ax.set_yticklabels([])
-    plt.xlim(0,60)
+    ax.set_xticks([-80, -60, -40, -20, 0, 20, 40, 60, 80])
+    ax.tick_params(axis='both', which='major', labelsize=16)
+    ax.tick_params(axis='both', which='minor', labelsize=16) 
+    plt.xlim(0,80)
     plt.subplot(4,2,8)
-    plt.plot(freq,fftx[:,7].real,'b',linewidth=3)
-    plt.plot(freq,fftx[:,7].imag,'r',linewidth=3) 
+    #plt.plot(freq,fftx[:,7].real,'b',linewidth=3)
+    #plt.plot(freq,fftx[:,7].imag,'r',linewidth=3) 
+    plt.plot(freq,abs(fftx[:,7]),'k',linewidth=3) 
     leg = plt.legend([r'$\tilde{\varphi}_8$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False) 
     ax = plt.gca()
     #ax.set_xticklabels([])
     ax.set_yticklabels([])
-    plt.xlim(0,60)
+    ax.set_xticks([-80, -60, -40, -20, 0, 20, 40, 60, 80])
+    ax.tick_params(axis='both', which='major', labelsize=16)
+    ax.tick_params(axis='both', which='minor', labelsize=16) 
+    plt.xlim(0,80)
     plt.savefig('Pictures/frequency_modes.pdf')
     plt.savefig('Pictures/frequency_modes.png')
     plot_pairwise(x)

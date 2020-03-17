@@ -12,14 +12,14 @@ mu0 = 4*pi*1e-7
 rho = 2.0e19*2*1.67*1e-27
 
 # Truncation number for the SVD
-r = 3
+r = 12
 # Threshold for SINDy algorithm
 # There is an issue here, which is that quadratic
 # terms will tend to have large coeffficients because
 # of normalizing the dynamics to be on the unit ball
-threshold = 0.05
+threshold = 0.02
 # Maximum polynomial order to use in the SINDy library
-poly_order = 2
+poly_order = 1
 # Start time index
 start = 10000
 # End time index
@@ -27,7 +27,7 @@ end = 34000
 # Dump files are written every 10 simulation steps
 skip = 10
 path_plus_prefix = '../HITSI_rMHD_HR'
-contour_animations = False
+contour_animations = True
 spacing = float(skip)
 # Fraction of the data to use as training data
 tfac = 3.0/5.0
