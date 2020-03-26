@@ -5,7 +5,7 @@ from pysindy.feature_library import PolynomialLibrary,CustomLibrary
 from pysindy.differentiation import FiniteDifference,SmoothedFiniteDifference
 from sindy_utils import make_table, \
     plot_BOD_Espectrum, make_evo_plots, \
-    make_3d_plots, plot_BOD_Fspectrum,plot_pod_temporal_modes
+    make_3d_plots, plot_pod_temporal_modes
 from pysindy.utils.pareto import pareto_curve
 from scipy.integrate import odeint
 from scipy.linalg import eig
@@ -64,6 +64,7 @@ def compressible_Framework(Q,inner_prod,time,poly_order,threshold,r,tfac):
     M_train = int(len(time)*tfac)
     t_train = time[:M_train]
     t_test = time[M_train:]
+    #x,feature_names,S2,Vh, = vector_POD(Q,t_train,r)
     x,feature_names,S2,Vh, = vector_POD(inner_prod,t_train,r)
     #for i in range(r):
     #    x[:,i] = x[:,i]*sum(np.amax(abs(Vh),axis=1)[0:r])
@@ -140,12 +141,31 @@ def compressible_Framework(Q,inner_prod,time,poly_order,threshold,r,tfac):
                 constraint_matrix[q,i*r+j+counter*(r-1)] = 1.0
                 counter = counter + 1
                 q = q + 1
-    print(constraint_matrix)
+    print(constraint_matrix,np.shape(constraint_matrix))
+    linear_r4_mat = np.zeros((4,14))
+    linear_r4_mat[0,1] = 0.091
+    linear_r4_mat[1,0] = -0.091
+    linear_r4_mat[2,3] = 0.183
+    linear_r4_mat[3,2] = -0.183
+    linear_r12_mat = np.zeros((12,90))
+    linear_r12_mat[0,1] = 0.089
+    linear_r12_mat[1,0] = -0.089
+    linear_r12_mat[2,3] = 0.172
+    linear_r12_mat[3,2] = -0.172
+    linear_r12_mat[2,5] = 0.03
+    linear_r12_mat[5,2] = -0.03
+    linear_r12_mat[2,6] = 0.022
+    linear_r12_mat[6,2] = -0.022
+    linear_r12_mat[6,4] = 0.022
+    linear_r12_mat[4,6] = 0.023
+    linear_r12_mat[7,5] = -0.023
+    linear_r12_mat[5,7] = -0.123
+    linear_r12_mat[7,5] = 0.123
     #sindy_opt = STLSQ(threshold=threshold)
     #sindy_opt = SR3(threshold=threshold, nu=1, max_iter=1000,tol=1e-8)
     sindy_opt = SR3Enhanced(threshold=threshold, nu=1, max_iter=1000, \
         constraint_lhs=constraint_matrix,constraint_rhs=constraint_zeros, \
-        tol=1e-15,thresholder='l0')
+        tol=1e-15,thresholder='l0',initial_guess=linear_r4_mat)
     model = SINDy(optimizer=sindy_opt, \
         feature_library=sindy_library, \
         differentiation_method=FiniteDifference(drop_endpoints=True), \
@@ -184,9 +204,8 @@ def compressible_Framework(Q,inner_prod,time,poly_order,threshold,r,tfac):
     make_evo_plots(x_dot,x_dot_train, \
         x_dot_sim,x_true,x_sim,time,t_train,t_test)
     make_table(model,feature_names,r)
-    exit()
     make_3d_plots(x_true,x_sim,t_test,'sim')
-    make_3d_plots(x_sim1,x_sim2,t_cycle,'limitcycle')
+    #make_3d_plots(x_sim1,x_sim2,t_cycle,'limitcycle')
     #plt.show()
     # now attempt a pareto curve
     #print('performing Pareto analysis')
@@ -232,12 +251,14 @@ def vector_POD(inner_prod,t_train,r):
         with the original measurements
 
     """
-    #V,S2,Vh = np.linalg.svd(inner_prod,full_matrices=False)
+    #U,S2,Vh = np.linalg.svd(inner_prod,full_matrices=False)
+    #v,S2,Vh = np.linalg.svd(inner_prod,full_matrices=False)
     S2,v = eig(inner_prod)
     idx = S2.argsort()[::-1]
     S2 = S2[idx]
     v = v[:,idx]
     Vh = np.transpose(v)
+    #v = np.transpose(Vh)
     plot_pod_temporal_modes(v[:len(t_train),:],t_train)
     plot_BOD_Espectrum(S2)
     print("% field in first r modes = ",sum(np.sqrt(S2[0:r]))/sum(np.sqrt(S2)))
