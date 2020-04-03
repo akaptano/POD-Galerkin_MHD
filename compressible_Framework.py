@@ -181,6 +181,8 @@ def compressible_Framework(Q,inner_prod,time,poly_order,threshold,r,tfac):
     linear_r4_mat[3,2] = -0.182
     linear_r4_mat[5,4] = -3*0.091
     linear_r4_mat[4,5] = 3*0.091
+    linear_r4_mat[8,7] = -4*0.091
+    linear_r4_mat[7,8] = 4*0.091
     #linear_r4_mat[6,7] = 4*0.091
     #linear_r4_mat[7,6] = -4*0.091
     linear_r12_mat = np.zeros((12,90))
@@ -199,7 +201,7 @@ def compressible_Framework(Q,inner_prod,time,poly_order,threshold,r,tfac):
     linear_r12_mat[7,5] = 0.123
     #sindy_opt = STLSQ(threshold=threshold)
     #sindy_opt = SR3(threshold=threshold, nu=1, max_iter=1000,tol=1e-8)
-    sindy_opt = SR3Enhanced(threshold=threshold, nu=1, max_iter=10000, \
+    sindy_opt = SR3Enhanced(threshold=threshold, nu=1, max_iter=20000, \
         constraint_lhs=constraint_matrix,constraint_rhs=constraint_zeros, \
         tol=1e-6,thresholder='l0',initial_guess=linear_r4_mat)
     model = SINDy(optimizer=sindy_opt, \
@@ -296,7 +298,8 @@ def vector_POD(inner_prod,t_train,r):
     v = v[:,idx]
     Vh = np.transpose(v)
     #v = np.transpose(Vh)
-    plot_pod_temporal_modes(v[:len(t_train),:],t_train)
+    plot_pod_temporal_modes(v,time)
+    #plot_pod_temporal_modes(v[:len(t_train),:],t_train)
     plot_BOD_Espectrum(S2)
     print("% field in first r modes = ",sum(np.sqrt(S2[0:r]))/sum(np.sqrt(S2)))
     print("% energy in first r modes = ",sum(S2[0:r])/sum(S2))

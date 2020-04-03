@@ -250,15 +250,15 @@ def make_table(sindy_model,feature_names,r):
     #fig.tight_layout()
     plt.savefig('Pictures/SINDy_table.pdf')
     if r > 6:
-        fig, ax = plt.subplots(figsize=(6,10))
+        fig, ax = plt.subplots(figsize=(6,30))
         # hide axes
         fig.patch.set_visible(False)
         ax.axis('off')
         ax.axis('tight')
         ytable = ax.table(cellText=df.values[r:,:], rowLabels=output_names[r:],cellColours=colors[r:], \
             colLabels=df.columns, loc='center', colWidths=np.ones(12)*0.5/(12))
-        ytable.set_fontsize(18)
-        ytable.scale(1, 2)
+        ytable.set_fontsize(10)
+        #ytable.scale(1, 2)
         plt.savefig('Pictures/SINDy_table_quadratic.pdf')
 
 def update_manifold_movie(frame,x_true,x_sim,t_test):
