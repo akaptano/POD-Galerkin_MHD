@@ -33,18 +33,18 @@ if is_incompressible:
     path_plus_prefix = '../HITSI_rMHD_HR'
     time = np.loadtxt('../time.csv')
 else: 
-    r = 8
+    r = 11 
     poly_order = 2
-    threshold = 0.03
-    start = 100000
-    end = 270000
+    threshold = 0.05
+    start = 150000
+    end = 370000
     skip = 100
-    path_plus_prefix = '../compressible2/HITSI_rMHD_HR'
-    time = np.loadtxt('../compressible2/time.csv')
+    path_plus_prefix = '../compressible1/HITSI_rMHD_HR'
+    time = np.loadtxt('../compressible1/time.csv')
 contour_animations = False 
 spacing = float(skip)
 # Fraction of the data to use as training data
-tfac = 3.0/5.0
+tfac = 9.0/10.0
 # shorten and put into microseconds
 time = time[int(start/spacing):int(end/spacing):int(skip/spacing)]*1e6
 M = len(time)
@@ -68,7 +68,7 @@ if is_incompressible:
 else:
     Bx_mat,By_mat,Bz_mat,Vx_mat,Vy_mat,Vz_mat,dens = \
         load_compressible_data(start,end,skip,path_plus_prefix)
-    plot_density(time,dens)
+    #plot_density(time,dens)
     sample_skip = 1
     Bx_mat = Bx_mat[::sample_skip,:]
     By_mat = By_mat[::sample_skip,:]

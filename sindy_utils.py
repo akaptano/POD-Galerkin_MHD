@@ -233,7 +233,7 @@ def make_table(sindy_model,feature_names,r):
         print(feature_names[i])
     print(coefficients,feature_names)
     df = pd.DataFrame(coefficients, columns=feature_names)
-    fig, ax = plt.subplots(figsize=(14, 10))
+    fig, ax = plt.subplots(figsize=(6,10))
     # hide axes
     fig.patch.set_visible(False)
     ax.axis('off')
@@ -250,7 +250,7 @@ def make_table(sindy_model,feature_names,r):
     #fig.tight_layout()
     plt.savefig('Pictures/SINDy_table.pdf')
     if r > 6:
-        fig, ax = plt.subplots(figsize=(14, 10))
+        fig, ax = plt.subplots(figsize=(6,10))
         # hide axes
         fig.patch.set_visible(False)
         ax.axis('off')
@@ -767,6 +767,8 @@ def update_contour_movie(frame,X,Y,Z,B_true,B_pod,B_sim,t_test,prefix):
         cbar = fig.colorbar(im,ticks=[-5e2,-2.5e2,0,2.5e2,5e2],extend='both',cax=cbar_ax)
         plt.clim(-5e2,5e2)
     cbar.ax.tick_params(labelsize=18)
+    if frame == 0:
+        plt.savefig('Pictures/'+prefix+'_contours.pdf')
 
 def plot_BOD_Espectrum(S):
     """
@@ -886,6 +888,10 @@ def make_evo_plots(x_dot,x_dot_train, \
         #if i < r-2:
         #axs[i].set_xticks([2.4,2.6,2.8,3.0])
         axs[i].set_xticklabels([])
+        #axs[i].set_xlim(t_test[0]/1.0e3,t_test[int(len(t_test)/2.0)]/1.0e3)
+        #axs[i].set_ylim(-0.2,0.2)
+        #axs[i].set_xlim(t_test[0]/1.0e3,t_test[int(len(t_test)/2.0)]/1.0e3)
+        #axs[i].set_ylim(-1,1)
         #if i != r-1:
         #    axs[i].set_xticklabels([])
         #else:
@@ -1086,11 +1092,12 @@ def plot_pod_temporal_modes(x,time):
     plt.figure(figsize=(16,10))
     plt.subplot(3,4,1)
     plt.plot(time,x[:,0]/np.max(abs(x[:,0])),'k')
-    leg = plt.legend([r'$a_1$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
+    leg = plt.legend([r'$a_1$'],fontsize=24,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False)
     ax = plt.gca()
     #ax.set_xticks([1.0,1.5,2.0])
+    #ax.set_xticks([1.5,2.25,3.0,3.75])
     ax.set_yticks([-1,0,1])
     plt.ylim(-1.1,1.1)
     ax.set_xticklabels([])
@@ -1098,11 +1105,12 @@ def plot_pod_temporal_modes(x,time):
     plt.grid(True)
     plt.subplot(3,4,2)
     plt.plot(time,x[:,1]/np.max(abs(x[:,1])),'k')
-    leg = plt.legend([r'$a_2$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
+    leg = plt.legend([r'$a_2$'],fontsize=24,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False)
     ax = plt.gca()
     #ax.set_xticks([1.0,1.5,2.0])
+    #ax.set_xticks([1.5,2.25,3.0,3.75])
     ax.set_yticks([-1,0,1])
     plt.ylim(-1.1,1.1)
     ax.set_xticklabels([])
@@ -1110,11 +1118,12 @@ def plot_pod_temporal_modes(x,time):
     plt.grid(True)
     plt.subplot(3,4,3)
     plt.plot(time,x[:,2]/np.max(abs(x[:,2])),'k')
-    leg = plt.legend([r'$a_3$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
+    leg = plt.legend([r'$a_3$'],fontsize=24,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False)
     ax = plt.gca()
     #ax.set_xticks([1.0,1.5,2.0])
+    #ax.set_xticks([1.5,2.25,3.0,3.75])
     ax.set_yticks([-1,0,1])
     plt.ylim(-1.1,1.1)
     ax.set_xticklabels([])
@@ -1122,11 +1131,12 @@ def plot_pod_temporal_modes(x,time):
     plt.grid(True)
     plt.subplot(3,4,4)
     plt.plot(time,x[:,3]/np.max(abs(x[:,3])),'k')
-    leg = plt.legend([r'$a_4$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
+    leg = plt.legend([r'$a_4$'],fontsize=24,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False)
     ax = plt.gca()
     #ax.set_xticks([1.0,1.5,2.0])
+    #ax.set_xticks([1.5,2.25,3.0,3.75])
     ax.set_yticks([-1,0,1])
     plt.ylim(-1.1,1.1)
     ax.set_xticklabels([])
@@ -1134,11 +1144,12 @@ def plot_pod_temporal_modes(x,time):
     plt.grid(True)
     plt.subplot(3,4,5)
     plt.plot(time,x[:,4]/np.max(abs(x[:,4])),'k')
-    leg = plt.legend([r'$a_5$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
+    leg = plt.legend([r'$a_5$'],fontsize=24,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False)
     ax = plt.gca()
     #ax.set_xticks([1.0,1.5,2.0])
+    #ax.set_xticks([1.5,2.25,3.0,3.75])
     ax.set_yticks([-1,0,1])
     plt.ylim(-1.1,1.1)
     ax.set_xticklabels([])
@@ -1146,11 +1157,12 @@ def plot_pod_temporal_modes(x,time):
     plt.grid(True)
     plt.subplot(3,4,6)
     plt.plot(time,x[:,5]/np.max(abs(x[:,5])),'k')
-    leg = plt.legend([r'$a_6$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
+    leg = plt.legend([r'$a_6$'],fontsize=24,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False)
     ax = plt.gca()
     #ax.set_xticks([1.0,1.5,2.0])
+    #ax.set_xticks([1.5,2.25,3.0,3.75])
     ax.set_yticks([-1,0,1])
     plt.ylim(-1.1,1.1)
     ax.set_xticklabels([])
@@ -1158,11 +1170,12 @@ def plot_pod_temporal_modes(x,time):
     plt.grid(True)
     plt.subplot(3,4,7)
     plt.plot(time,x[:,6]/np.max(abs(x[:,6])),'k')
-    leg = plt.legend([r'$a_7$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
+    leg = plt.legend([r'$a_7$'],fontsize=24,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False)
     ax = plt.gca()
     #ax.set_xticks([1.0,1.5,2.0])
+    #ax.set_xticks([1.5,2.25,3.0,3.75])
     ax.set_yticks([-1,0,1])
     plt.ylim(-1.1,1.1)
     ax.set_xticklabels([])
@@ -1170,11 +1183,11 @@ def plot_pod_temporal_modes(x,time):
     plt.grid(True)
     plt.subplot(3,4,8)
     plt.plot(time,x[:,7]/np.max(abs(x[:,7])),'k')
-    leg = plt.legend([r'$a_8$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
+    leg = plt.legend([r'$a_8$'],fontsize=24,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False) 
     ax = plt.gca()
-    #ax.set_xticks([1.0,1.5,2.0])
+    #ax.set_xticks([1.5,2.25,3.0,3.75])
     ax.set_yticks([-1,0,1])
     plt.ylim(-1.1,1.1)
     ax.set_xticklabels([])
@@ -1182,7 +1195,7 @@ def plot_pod_temporal_modes(x,time):
     plt.grid(True)
     plt.subplot(3,4,9)
     plt.plot(time,x[:,8]/np.max(abs(x[:,8])),'k')
-    leg = plt.legend([r'$a_9$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
+    leg = plt.legend([r'$a_9$'],fontsize=24,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False) 
     ax = plt.gca()
@@ -1196,7 +1209,7 @@ def plot_pod_temporal_modes(x,time):
     plt.grid(True)
     plt.subplot(3,4,10)
     plt.plot(time,x[:,9]/np.max(abs(x[:,9])),'k')
-    leg = plt.legend([r'$a_{10}$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
+    leg = plt.legend([r'$a_{10}$'],fontsize=24,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False) 
     ax = plt.gca()
@@ -1210,7 +1223,7 @@ def plot_pod_temporal_modes(x,time):
     plt.grid(True)
     plt.subplot(3,4,11)
     plt.plot(time,x[:,10]/np.max(abs(x[:,10])),'k')
-    leg = plt.legend([r'$a_{11}$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
+    leg = plt.legend([r'$a_{11}$'],fontsize=24,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False) 
     ax = plt.gca()
@@ -1224,7 +1237,7 @@ def plot_pod_temporal_modes(x,time):
     plt.grid(True)
     plt.subplot(3,4,12)
     plt.plot(time,x[:,11]/np.max(abs(x[:,11])),'k')
-    leg = plt.legend([r'$a_{12}$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
+    leg = plt.legend([r'$a_{12}$'],fontsize=24,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False) 
     ax = plt.gca()
@@ -1253,7 +1266,7 @@ def plot_pod_temporal_modes(x,time):
     plt.figure(figsize=(16,10))
     plt.subplot(3,4,1)
     plt.plot(freq,abs(fftx[:,0]),'k',linewidth=3) 
-    leg = plt.legend([r'$\tilde{a}_1$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
+    leg = plt.legend([r'$\tilde{a}_1$'],fontsize=24,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False)
     ax = plt.gca()
@@ -1265,7 +1278,7 @@ def plot_pod_temporal_modes(x,time):
     plt.grid(True)
     plt.subplot(3,4,2)
     plt.plot(freq,abs(fftx[:,1]),'k',linewidth=3) 
-    leg = plt.legend([r'$\tilde{a}_2$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
+    leg = plt.legend([r'$\tilde{a}_2$'],fontsize=24,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False)
     ax = plt.gca()
@@ -1277,7 +1290,7 @@ def plot_pod_temporal_modes(x,time):
     plt.grid(True)
     plt.subplot(3,4,3)
     plt.plot(freq,abs(fftx[:,2]),'k',linewidth=3) 
-    leg = plt.legend([r'$\tilde{a}_3$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
+    leg = plt.legend([r'$\tilde{a}_3$'],fontsize=24,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False)
     ax = plt.gca()
@@ -1289,7 +1302,7 @@ def plot_pod_temporal_modes(x,time):
     plt.grid(True)
     plt.subplot(3,4,4)
     plt.plot(freq,abs(fftx[:,3]),'k',linewidth=3) 
-    leg = plt.legend([r'$\tilde{a}_4$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
+    leg = plt.legend([r'$\tilde{a}_4$'],fontsize=24,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False)
     ax = plt.gca()
@@ -1301,7 +1314,7 @@ def plot_pod_temporal_modes(x,time):
     plt.grid(True)
     plt.subplot(3,4,5)
     plt.plot(freq,abs(fftx[:,4]),'k',linewidth=3) 
-    leg = plt.legend([r'$\tilde{a}_5$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
+    leg = plt.legend([r'$\tilde{a}_5$'],fontsize=24,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False)
     ax = plt.gca()
@@ -1313,7 +1326,7 @@ def plot_pod_temporal_modes(x,time):
     plt.grid(True)
     plt.subplot(3,4,6)
     plt.plot(freq,abs(fftx[:,5]),'k',linewidth=3) 
-    leg = plt.legend([r'$\tilde{a}_6$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
+    leg = plt.legend([r'$\tilde{a}_6$'],fontsize=24,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False)
     ax = plt.gca()
@@ -1325,7 +1338,7 @@ def plot_pod_temporal_modes(x,time):
     plt.grid(True)
     plt.subplot(3,4,7)
     plt.plot(freq,abs(fftx[:,6]),'k',linewidth=3) 
-    leg = plt.legend([r'$\tilde{a}_7$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
+    leg = plt.legend([r'$\tilde{a}_7$'],fontsize=24,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False)
     ax = plt.gca()
@@ -1339,7 +1352,7 @@ def plot_pod_temporal_modes(x,time):
     plt.grid(True)
     plt.subplot(3,4,8)
     plt.plot(freq,abs(fftx[:,7]),'k',linewidth=3) 
-    leg = plt.legend([r'$\tilde{a}_8$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
+    leg = plt.legend([r'$\tilde{a}_8$'],fontsize=24,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False) 
     ax = plt.gca()
@@ -1353,7 +1366,7 @@ def plot_pod_temporal_modes(x,time):
     plt.grid(True)
     plt.subplot(3,4,9)
     plt.plot(freq,abs(fftx[:,8]),'k',linewidth=3) 
-    leg = plt.legend([r'$\tilde{a}_9$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
+    leg = plt.legend([r'$\tilde{a}_9$'],fontsize=24,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False) 
     ax = plt.gca()
@@ -1367,7 +1380,7 @@ def plot_pod_temporal_modes(x,time):
     plt.grid(True)
     plt.subplot(3,4,10)
     plt.plot(freq,abs(fftx[:,9]),'k',linewidth=3) 
-    leg = plt.legend([r'$\tilde{a}_{10}$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
+    leg = plt.legend([r'$\tilde{a}_{10}$'],fontsize=24,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False) 
     ax = plt.gca()
@@ -1381,7 +1394,7 @@ def plot_pod_temporal_modes(x,time):
     plt.grid(True)
     plt.subplot(3,4,11)
     plt.plot(freq,abs(fftx[:,10]),'k',linewidth=3) 
-    leg = plt.legend([r'$\tilde{a}_{11}$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
+    leg = plt.legend([r'$\tilde{a}_{11}$'],fontsize=24,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False) 
     ax = plt.gca()
@@ -1395,7 +1408,7 @@ def plot_pod_temporal_modes(x,time):
     plt.grid(True)
     plt.subplot(3,4,12)
     plt.plot(freq,abs(fftx[:,11]),'k',linewidth=3) 
-    leg = plt.legend([r'$\tilde{a}_{12}$'],fontsize=20,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
+    leg = plt.legend([r'$\tilde{a}_{12}$'],fontsize=24,loc='upper right',framealpha=1.0,handlelength=0,handletextpad=0,fancybox=True)
     for item in leg.legendHandles:
         item.set_visible(False) 
     ax = plt.gca()
@@ -1416,8 +1429,8 @@ def plot_pod_spatial_modes(X,Y,Z,Q,Vh,wr,U,time):
     Z0 = np.isclose(Z,np.ones(len(Z))*min(abs(Z)),rtol=1e-3,atol=1e-3)
     ind_Z0 = [i for i, p in enumerate(Z0) if p]
     print('Number of points on midplane: ',ind_Z0,len(ind_Z0))
-    ri = np.linspace(0,max(R[ind_Z0]),100)
-    phii = np.linspace(0,2*np.pi,256)
+    ri = np.linspace(0,max(R[ind_Z0]),40)
+    phii = np.linspace(0,2*np.pi,100)
     ri,phii = np.meshgrid(ri,phii)
     xi = ri*np.cos(phii)
     yi = ri*np.sin(phii)
@@ -1443,8 +1456,8 @@ def plot_pod_spatial_modes(X,Y,Z,Q,Vh,wr,U,time):
     #cbar = fig.colorbar(im,ticks=[-1.0,-0.5,0,0.5,1.0],extend='both',cax=cbar_ax)
     #plt.clim(-1e0,1e0)
     #cbar.ax.tick_params(labelsize=18)
-    plt.savefig('Pictures/spatial_modes.pdf',dpi=200)
-    plt.savefig('Pictures/spatial_modes.eps',dpi=75)
+    plt.savefig('Pictures/spatial_modes.pdf',dpi=50)
+    plt.savefig('Pictures/spatial_modes.eps',dpi=50)
     # swapping in the DMD modes here
     #U = dmd(Q,24,time)
     #U = 0.5*(U[ind_Z0,::2]+np.conj(U[ind_Z0,::2]))
@@ -1546,8 +1559,8 @@ def plot_pairwise(x):
             #for item in leg.legendHandles:
             #    item.set_visible(False)
             q = q + 1
-    plt.savefig('Pictures/pairwise_plots.pdf',dpi=400)
-    plt.savefig('Pictures/pairwise_plots.eps',dpi=400)
+    plt.savefig('Pictures/pairwise_plots.pdf',dpi=100)
+    plt.savefig('Pictures/pairwise_plots.eps',dpi=100)
 
 def plot_density(time,dens):
     time = time/1.0e3

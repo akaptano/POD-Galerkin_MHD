@@ -66,6 +66,7 @@ def compressible_Framework(Q,inner_prod,time,poly_order,threshold,r,tfac):
     t_test = time[M_train:]
     #x,feature_names,S2,Vh, = vector_POD(Q,t_train,r)
     x,feature_names,S2,Vh, = vector_POD(inner_prod,t_train,r)
+    x[:,6] = np.zeros(np.shape(x[:,6]))
     #for i in range(r):
     #    x[:,i] = x[:,i]*sum(np.amax(abs(Vh),axis=1)[0:r])
     #S = np.sqrt(S2[0:r,0:r])
@@ -125,6 +126,8 @@ def compressible_Framework(Q,inner_prod,time,poly_order,threshold,r,tfac):
                 q = q + 1
     else:
         if poly_order == 2:
+            #constraint_zeros = np.zeros(6+int(r*(r+1)/2))
+            #constraint_matrix = np.zeros((6+int(r*(r+1)/2),int(r*(r**2+3*r)/2)))
             constraint_matrix = np.zeros((int(r*(r+1)/2),int(r*(r**2+3*r)/2)))
         if poly_order == 3:
             #constraint_matrix = np.zeros((int(r*(r+1)/2),int(r*(r**2+3*r)/2)+336))
@@ -141,12 +144,45 @@ def compressible_Framework(Q,inner_prod,time,poly_order,threshold,r,tfac):
                 constraint_matrix[q,i*r+j+counter*(r-1)] = 1.0
                 counter = counter + 1
                 q = q + 1
+        #constraint_matrix[-8,8*8+2] = 1.0
+        #constraint_matrix[-8,9*8+5] = -2.0
+        #constraint_matrix[-7,12*8+6] = 1.0
+        #constraint_matrix[-7,12*8+7] = -1.0
+        #constraint_matrix[-6,17*8+6] = 1.0
+        #constraint_matrix[-6,17*8+7] = -1.0
+        #constraint_matrix[-5,17*8+6] = 1.0
+        #constraint_matrix[-5,18*8+7] = 1.0
+        #constraint_matrix[-4,9*8+5] = 1.0
+        #constraint_matrix[-4,10*8+4] = 1.0
+        #constraint_matrix[-3,15*8+4] = 1.0
+        #constraint_matrix[-3,16*8+5] = -1.0
+        #constraint_matrix[-2,36*8+3] = 1.0
+        #constraint_matrix[-2,37*8+3] = 1.0
+        #constraint_matrix[-1,36*8+6] = 1.0
+        #constraint_matrix[-1,37*8+6] = 1.0
+        #
+        #constraint_matrix[-6,9*8+6] = 1.0
+        #constraint_matrix[-6,9*8+7] = 1.0
+        #constraint_matrix[-5,40*8+7] = 1.0
+        #constraint_matrix[-5,41*8+7] = -1.0
+        #constraint_matrix[-4,36*8+3] = 1.0
+        #constraint_matrix[-4,37*8+3] = 1.0
+        #constraint_matrix[-3,12*8+6] = 1.0
+        #constraint_matrix[-3,18*8+6] = 1.0
+        #constraint_matrix[-2,18*8+6] = -1.0
+        #constraint_matrix[-2,18*8+7] = 1.0
+        #constraint_matrix[-1,12*8+6] = 2.0
+        #constraint_matrix[-1,12*8+7] = -1.0
     print(constraint_matrix,np.shape(constraint_matrix))
-    linear_r4_mat = np.zeros((4,14))
+    linear_r4_mat = np.zeros((r,r))
     linear_r4_mat[0,1] = 0.091
     linear_r4_mat[1,0] = -0.091
-    linear_r4_mat[2,3] = 0.183
-    linear_r4_mat[3,2] = -0.183
+    linear_r4_mat[2,3] = 0.182
+    linear_r4_mat[3,2] = -0.182
+    linear_r4_mat[5,4] = -3*0.091
+    linear_r4_mat[4,5] = 3*0.091
+    #linear_r4_mat[6,7] = 4*0.091
+    #linear_r4_mat[7,6] = -4*0.091
     linear_r12_mat = np.zeros((12,90))
     linear_r12_mat[0,1] = 0.089
     linear_r12_mat[1,0] = -0.089
@@ -163,9 +199,9 @@ def compressible_Framework(Q,inner_prod,time,poly_order,threshold,r,tfac):
     linear_r12_mat[7,5] = 0.123
     #sindy_opt = STLSQ(threshold=threshold)
     #sindy_opt = SR3(threshold=threshold, nu=1, max_iter=1000,tol=1e-8)
-    sindy_opt = SR3Enhanced(threshold=threshold, nu=1, max_iter=1000, \
+    sindy_opt = SR3Enhanced(threshold=threshold, nu=1, max_iter=10000, \
         constraint_lhs=constraint_matrix,constraint_rhs=constraint_zeros, \
-        tol=1e-15,thresholder='l0',initial_guess=linear_r4_mat)
+        tol=1e-6,thresholder='l0',initial_guess=linear_r4_mat)
     model = SINDy(optimizer=sindy_opt, \
         feature_library=sindy_library, \
         differentiation_method=FiniteDifference(drop_endpoints=True), \
@@ -178,6 +214,7 @@ def compressible_Framework(Q,inner_prod,time,poly_order,threshold,r,tfac):
     t_cycle = np.linspace(time[M_train],time[M_train]*1.3,int(len(time)/2.0))
     #model.print()
     print(model.coefficients())
+    print('Sum = ',np.sum(np.sum(sindy_opt.coef_)))
     #print(np.ravel(model.coefficients()))
     #print(model.get_feature_names())
     #print(sindy_opt.history_)
@@ -204,7 +241,7 @@ def compressible_Framework(Q,inner_prod,time,poly_order,threshold,r,tfac):
     make_evo_plots(x_dot,x_dot_train, \
         x_dot_sim,x_true,x_sim,time,t_train,t_test)
     make_table(model,feature_names,r)
-    make_3d_plots(x_true,x_sim,t_test,'sim')
+    #make_3d_plots(x_true,x_sim,t_test,'sim')
     #make_3d_plots(x_sim1,x_sim2,t_cycle,'limitcycle')
     #plt.show()
     # now attempt a pareto curve
