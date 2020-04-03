@@ -65,7 +65,7 @@ def compressible_Framework(Q,inner_prod,time,poly_order,threshold,r,tfac):
     t_train = time[:M_train]
     t_test = time[M_train:]
     #x,feature_names,S2,Vh, = vector_POD(Q,t_train,r)
-    x,feature_names,S2,Vh, = vector_POD(inner_prod,t_train,r)
+    x,feature_names,S2,Vh, = vector_POD(inner_prod,time,r)
     x[:,6] = np.zeros(np.shape(x[:,6]))
     #for i in range(r):
     #    x[:,i] = x[:,i]*sum(np.amax(abs(Vh),axis=1)[0:r])
@@ -298,7 +298,7 @@ def vector_POD(inner_prod,t_train,r):
     v = v[:,idx]
     Vh = np.transpose(v)
     #v = np.transpose(Vh)
-    plot_pod_temporal_modes(v,time)
+    plot_pod_temporal_modes(v,t_train)
     #plot_pod_temporal_modes(v[:len(t_train),:],t_train)
     plot_BOD_Espectrum(S2)
     print("% field in first r modes = ",sum(np.sqrt(S2[0:r]))/sum(np.sqrt(S2)))
