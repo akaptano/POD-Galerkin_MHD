@@ -24,6 +24,10 @@ def load_incompressible_data(start,end,skip,path_plus_prefix):
         Parameter used to skip through dump files at some
         desired frequency
 
+    path_plus_prefix: string
+    (1)
+        A string with the file path + file prefix
+
     Returns
     -------
 
@@ -145,6 +149,10 @@ def load_compressible_data(start,end,skip,path_plus_prefix):
         Parameter used to skip through dump files at some
         desired frequency
 
+    path_plus_prefix: string
+    (1)
+        A string with the file path + file prefix
+
     Returns
     -------
 
@@ -183,6 +191,11 @@ def load_compressible_data(start,end,skip,path_plus_prefix):
     M = number of time samples)
         The mean-subtracted Vz
         at every volume-sampled location
+
+    dens_mat: 2D numpy array of floats
+    (n_samples = number of volume-sampled locations,
+    M = number of time samples)
+        The density at every volume-sampled location
 
     """
     Bx_mat = []
