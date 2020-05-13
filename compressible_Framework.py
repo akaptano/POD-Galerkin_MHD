@@ -9,7 +9,7 @@ from scipy.linalg import eig
 from matplotlib import pyplot as plt
 from numpy.random import random
 
-def compressible_Framework(inner_prod,time,poly_order,threshold,r,tfac,SR3Enhanced,make_3Dphaseplots):
+def compressible_Framework(inner_prod,time,poly_order,thresholds,r,tfac,constrained_SR3,make_3Dphaseplots):
     """
     Performs the entire vector_POD + SINDy framework for a given polynomial
     order and thresholding for the SINDy method.
@@ -28,9 +28,9 @@ def compressible_Framework(inner_prod,time,poly_order,threshold,r,tfac,SR3Enhanc
     (1)
         Highest polynomial order to use in the SINDy library
 
-    threshold: float
+    thresholds: 2D array of floats
     (1)
-        Threshold in the SINDy algorithm, below which coefficients
+        Thresholds for each term in the SINDy algorithm, below which coefficients
         will be zeroed out.
 
     r: int
@@ -41,7 +41,7 @@ def compressible_Framework(inner_prod,time,poly_order,threshold,r,tfac,SR3Enhanc
     (1)
         Fraction of the data to treat as training data
 
-    SR3Enhanced: SINDy optimizer object
+    constrained_SR3: SINDy optimizer object
     (1)
         The SR3 optimizer with linear equality constraints
 
@@ -124,36 +124,36 @@ def compressible_Framework(inner_prod,time,poly_order,threshold,r,tfac,SR3Enhanc
                 constraint_matrix[q,i*r+j+counter*(r-1)] = 1.0
                 counter = counter + 1
                 q = q + 1
-    # linear_r4_mat or linear_r12_mat are initial guesses
+    # initial_guess or linear_r12_mat are initial guesses
     # for the optimization
-    linear_r4_mat = np.zeros((r,r))
-    linear_r4_mat[0,1] = 0.091
-    linear_r4_mat[1,0] = -0.091
-    linear_r4_mat[2,3] = 0.182
-    linear_r4_mat[3,2] = -0.182
-    linear_r4_mat[5,4] = -3*0.091
-    linear_r4_mat[4,5] = 3*0.091
-    #linear_r4_mat[8,7] = -4*0.091
-    #linear_r4_mat[7,8] = 4*0.091
-    #linear_r4_mat[6,7] = 4*0.091
-    #linear_r4_mat[7,6] = -4*0.091
-    linear_r12_mat = np.zeros((12,90))
-    linear_r12_mat[0,1] = 0.089
-    linear_r12_mat[1,0] = -0.089
-    linear_r12_mat[2,3] = 0.172
-    linear_r12_mat[3,2] = -0.172
-    linear_r12_mat[2,5] = 0.03
-    linear_r12_mat[5,2] = -0.03
-    linear_r12_mat[2,6] = 0.022
-    linear_r12_mat[6,2] = -0.022
-    linear_r12_mat[6,4] = 0.022
-    linear_r12_mat[4,6] = 0.023
-    linear_r12_mat[7,5] = -0.023
-    linear_r12_mat[5,7] = -0.123
-    linear_r12_mat[7,5] = 0.123
-    sindy_opt = SR3Enhanced(threshold=threshold, nu=1, max_iter=20000, \
+    initial_guess = np.zeros((r+np.shape(constraint_matrix)[0],r))
+    initial_guess[0,1] = 0.091
+    initial_guess[1,0] = -0.091
+    initial_guess[2,3] = 0.182
+    initial_guess[3,2] = -0.182
+    initial_guess[5,4] = -3*0.091
+    initial_guess[4,5] = 3*0.091
+    #initial_guess[8,7] = -4*0.091
+    #initial_guess[7,8] = 4*0.091
+    #initial_guess[6,7] = 4*0.091
+    #initial_guess[7,6] = -4*0.091
+    #linear_r12_mat = np.zeros((12,90))
+    #linear_r12_mat[0,1] = 0.089
+    #linear_r12_mat[1,0] = -0.089
+    #linear_r12_mat[2,3] = 0.172
+    #linear_r12_mat[3,2] = -0.172
+    #linear_r12_mat[2,5] = 0.03
+    #linear_r12_mat[5,2] = -0.03
+    #linear_r12_mat[2,6] = 0.022
+    #linear_r12_mat[6,2] = -0.022
+    #linear_r12_mat[6,4] = 0.022
+    #linear_r12_mat[4,6] = 0.023
+    #linear_r12_mat[7,5] = -0.023
+    #linear_r12_mat[5,7] = -0.123
+    #linear_r12_mat[7,5] = 0.123
+    sindy_opt = constrained_SR3(threshold=thresholds[0,0], nu=1, max_iter=20000, \
         constraint_lhs=constraint_matrix,constraint_rhs=constraint_zeros, \
-        tol=1e-6,thresholder='l0',initial_guess=linear_r4_mat)
+        tol=1e-6,thresholder="weighted_l0",initial_guess=initial_guess,thresholds=thresholds)
     model = SINDy(optimizer=sindy_opt, \
         feature_library=sindy_library, \
         differentiation_method=FiniteDifference(drop_endpoints=True), \
@@ -246,6 +246,7 @@ def vector_POD(inner_prod,t_train,r):
     Vh = np.transpose(v)
     #v = np.transpose(Vh)
     plot_pod_temporal_modes(v[:,0:12],t_train)
+    save_pod_temporal_modes(v,t_train,S2)
     plot_BOD_Espectrum(S2)
     print("% field in first r modes = ",sum(np.sqrt(S2[0:r]))/sum(np.sqrt(S2)))
     print("% energy in first r modes = ",sum(S2[0:r])/sum(S2))

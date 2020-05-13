@@ -7,7 +7,7 @@ from sindy_utils import inner_product, \
     plot_density, make_poloidal_movie
 from load_data import \
     load_incompressible_data, load_compressible_data
-from pysindy.optimizers import SR3Enhanced
+from pysindy.optimizers import constrained_SR3
 from compressible_Framework import compressible_Framework
 from scipy.linalg import eig
 
@@ -20,7 +20,8 @@ if is_incompressible:
     # terms will tend to have large coeffficients because
     # of normalizing the dynamics to be on the unit ball. Have been dealing
     # with this by adjusting the thresholds in the PySINDy solvers
-    threshold = 0.001
+    #threshold = 0.001
+    thresholds = 0.001*np.ones((r,r+r*(r+1)/2))
     # Maximum polynomial order to use in the SINDy library
     poly_order = 2
     # Start time index
@@ -35,7 +36,15 @@ if is_incompressible:
 else: 
     r = 7 
     poly_order = 2
-    threshold = 0.05
+    thresh = 0.0
+    thresholds = thresh*np.ones((r+int(r*(r+1)/2),r))
+    thresholds[r:,0:r] = 6*thresh*np.ones(thresholds[r:,0:r].shape)
+    thresholds[r:,4:6] = 3*thresh*np.ones(thresholds[r:,4:6].shape)
+    #coef_sparse = self.prox(coef_full, self.threshold)
+    #coef_sparse[0:r,2:r] = self.prox(coef_full[0:r,2:r], self.threshold)
+    #coef_sparse[r:,0:r] = self.prox(coef_full[r:,0:r], 6*self.threshold) #30.0 or 22.5
+    #coef_sparse[r:,4:6] = self.prox(coef_full[r:,4:6], 3*self.threshold) #30.0 or 22.5
+    #coef_sparse[r:,6] = self.prox(coef_full[r:,6], self.threshold) 
     start = 150000
     end = 399000
     skip = 100
@@ -93,7 +102,7 @@ print('D = ',n_samples)
 inner_prod = inner_product(Q,R)*dR*dphi*dZ
 Q = Q*1e4
 t_test,x_true,x_sim,S2 = \
-    compressible_Framework(inner_prod,time,poly_order,threshold,r,tfac,SR3Enhanced,make_3Dphaseplots)
+    compressible_Framework(inner_prod,time,poly_order,thresholds,r,tfac,constrained_SR3,make_3Dphaseplots)
     #compressible_Framework(Q,inner_prod,time,poly_order,threshold,r,tfac)
 M_test = len(t_test)
 M_train = int(len(time)*tfac)

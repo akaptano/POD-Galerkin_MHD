@@ -653,6 +653,42 @@ def make_3d_plots(x_true,x_sim,t_test,prefix,i,j,k):
     FPS = 25
     ani.save('Pictures/'+prefix+'manifold'+str(i)+str(j)+str(k)+'.mp4',fps=FPS,dpi=100)
 
+def save_pod_temporal_modes(x,time,S2):
+    """
+    Save the temporal POD modes to a file to share with others,
+    so that we don't have to reload the datasets every time
+
+    Parameters
+    ----------
+    x: 2D numpy array of floats
+    (M = number of time samples, M = number of time samples)
+        The temporal POD modes
+
+    time: numpy array of floats
+    (M = number of time samples)
+        Time range of interest
+
+    S2: numpy array of floats
+    (M = number of time samples)
+        The singular values
+    
+    """
+    myfile = open('trajectories.txt', 'w')
+    for i in range(np.shape(x)[0]):
+        for j in range(21):
+            if j == 0:
+              myfile.write("%2.6f " % time[i])
+              myfile.write("%2.6f " % x[i,j])
+            elif j+1 != 21:
+              myfile.write("%2.6f " % x[i,j])
+            else:
+              myfile.write("%2.6f\n" % x[i,j])
+    myfile.close()
+    myfile = open('singular_values.txt', 'w')
+    for i in range(len(S2)):
+        myfile.write("%2.6f\n" % S2[i])
+    myfile.close()
+
 def plot_pod_temporal_modes(x,time):
     """
     Illustrate the temporal POD modes
