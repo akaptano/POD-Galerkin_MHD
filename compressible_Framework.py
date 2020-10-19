@@ -8,8 +8,10 @@ from scipy.integrate import odeint
 from scipy.linalg import eig
 from matplotlib import pyplot as plt
 from numpy.random import random
+from pysindy.utils.pareto import pareto_curve
+from pysindy.optimizers import ConstrainedSR3 
 
-def compressible_Framework(inner_prod,time,poly_order,threshold,r,tfac,SR3Enhanced,make_3Dphaseplots):
+def compressible_Framework(inner_prod,time,poly_order,threshold,r,tfac,make_3Dphaseplots):
     """
     Performs the entire vector_POD + SINDy framework for a given polynomial
     order and thresholding for the SINDy method.
@@ -40,10 +42,6 @@ def compressible_Framework(inner_prod,time,poly_order,threshold,r,tfac,SR3Enhanc
     tfac: float
     (1)
         Fraction of the data to treat as training data
-
-    SR3Enhanced: SINDy optimizer object
-    (1)
-        The SR3 optimizer with linear equality constraints
 
     make_3Dphaseplots: bool
     (1)
@@ -91,7 +89,10 @@ def compressible_Framework(inner_prod,time,poly_order,threshold,r,tfac,SR3Enhanc
         library_function_names = [lambda x : x, lambda x,y : x+y, lambda x : x+x, lambda x,y,z: x+y+z, lambda x,y: x+x+y, lambda x,y: x+y+y, lambda x: x+x+x, lambda x,y,z,w: x+y+z+w, lambda x,y,z: x+y+z+z, lambda x,y: x+x+y+y, lambda x,y: x+x+x+y, lambda x: x+x+x+x]
     sindy_library = CustomLibrary(library_functions=library_functions, \
         function_names=library_function_names)
-    constraint_zeros = np.zeros(int(r*(r+1)/2))
+    #constraint_zeros = np.zeros(int(r*(r+1)/2)+r+r*(r-1)+int(r*(r-1)*(r-2)/6.0)+r**2+r-2)
+    constraint_zeros = np.zeros(int(r*(r+1)/2)+r+r*(r-1)+int(r*(r-1)*(r-2)/6.0))
+    #constraint_zeros = np.zeros(int(r*(r+1)/2))
+    #constraint_zeros = np.zeros(int(r*(r+1)/2))
     if poly_order == 1:
         constraint_matrix = np.zeros((int(r*(r+1)/2),r**2))
         for i in range(r):
@@ -108,7 +109,9 @@ def compressible_Framework(inner_prod,time,poly_order,threshold,r,tfac,SR3Enhanc
         if poly_order == 2:
             #constraint_zeros = np.zeros(6+int(r*(r+1)/2))
             #constraint_matrix = np.zeros((6+int(r*(r+1)/2),int(r*(r**2+3*r)/2)))
-            constraint_matrix = np.zeros((int(r*(r+1)/2),int(r*(r**2+3*r)/2)))
+            #constraint_matrix = np.zeros((int(r*(r+1)/2)+r+r*(r-1)+int(r*(r-1)*(r-2)/6.0)+(r**2+r-2),int(r*(r**2+3*r)/2)))
+            constraint_matrix = np.zeros((int(r*(r+1)/2)+r+r*(r-1)+int(r*(r-1)*(r-2)/6.0),int(r*(r**2+3*r)/2)))
+            #constraint_matrix = np.zeros((int(r*(r+1)/2),int(r*(r**2+3*r)/2)))
         if poly_order == 3:
             #constraint_matrix = np.zeros((int(r*(r+1)/2),int(r*(r**2+3*r)/2)+336))
             constraint_matrix = np.zeros((int(r*(r+1)/2),int(r*(r**2+3*r)/2)+588)) # 30
@@ -124,47 +127,117 @@ def compressible_Framework(inner_prod,time,poly_order,threshold,r,tfac,SR3Enhanc
                 constraint_matrix[q,i*r+j+counter*(r-1)] = 1.0
                 counter = counter + 1
                 q = q + 1
+        # constraints on the quadratic terms set below
+        for i in range(r):
+            constraint_matrix[q,r*(int((r**2+3*r)/2.0)-r) + i*(r+1)] = 1.0
+            q = q + 1
+        for i in range(r):
+            for j in range(i+1,r):
+                constraint_matrix[q,r*(int((r**2+3*r)/2.0)-r+j)+i] = 1.0
+                constraint_matrix[q,r*(r+j-1)+j+r*int(i*(2*r-i-3)/2.0)] = 1.0
+                q = q + 1
+        for i in range(r):
+            for j in range(0,i):
+                constraint_matrix[q,r*(int((r**2+3*r)/2.0)-r+j)+i] = 1.0
+                constraint_matrix[q,r*(r+i-1)+j+r*int(j*(2*r-j-3)/2.0)] = 1.0
+                q = q + 1
+        for i in range(r):
+            for j in range(i+1,r):
+                for k in range(j+1,r):
+                    constraint_matrix[q,r*(r+k-1)+i+r*int(j*(2*r-j-3)/2.0)] = 1.0
+                    constraint_matrix[q,r*(r+k-1)+j+r*int(i*(2*r-i-3)/2.0)] = 1.0
+                    constraint_matrix[q,r*(r+j-1)+k+r*int(i*(2*r-i-3)/2.0)] = 1.0
+                    q = q + 1
+        # Constraints on quadratic parts of the harmonic oscillator pair
+       # for i in range(int((r**2+r)/2)-1):
+       #     constraint_matrix[q,r**2+r*i] = 1.0
+       #     q = q + 1
+       #     constraint_matrix[q,r**2+r*i+1] = 1.0
+       #     q = q + 1
+       #     print(q,i)
+        print(q, np.shape(constraint_matrix))
     # linear_r4_mat or linear_r12_mat are initial guesses
     # for the optimization
-    linear_r4_mat = np.zeros((r,r))
-    linear_r4_mat[0,1] = 0.091
-    linear_r4_mat[1,0] = -0.091
-    linear_r4_mat[2,3] = 0.182
-    linear_r4_mat[3,2] = -0.182
-    linear_r4_mat[5,4] = -3*0.091
-    linear_r4_mat[4,5] = 3*0.091
-    #linear_r4_mat[8,7] = -4*0.091
-    #linear_r4_mat[7,8] = 4*0.091
-    #linear_r4_mat[6,7] = 4*0.091
-    #linear_r4_mat[7,6] = -4*0.091
-    linear_r12_mat = np.zeros((12,90))
-    linear_r12_mat[0,1] = 0.089
-    linear_r12_mat[1,0] = -0.089
-    linear_r12_mat[2,3] = 0.172
-    linear_r12_mat[3,2] = -0.172
-    linear_r12_mat[2,5] = 0.03
-    linear_r12_mat[5,2] = -0.03
-    linear_r12_mat[2,6] = 0.022
-    linear_r12_mat[6,2] = -0.022
-    linear_r12_mat[6,4] = 0.022
-    linear_r12_mat[4,6] = 0.023
-    linear_r12_mat[7,5] = -0.023
-    linear_r12_mat[5,7] = -0.123
-    linear_r12_mat[7,5] = 0.123
-    sindy_opt = SR3Enhanced(threshold=threshold, nu=1, max_iter=20000, \
-        constraint_lhs=constraint_matrix,constraint_rhs=constraint_zeros, \
-        tol=1e-6,thresholder='l0',initial_guess=linear_r4_mat)
-    model = SINDy(optimizer=sindy_opt, \
-        feature_library=sindy_library, \
-        differentiation_method=FiniteDifference(drop_endpoints=True), \
-        feature_names=feature_names)
+    print('Constraint matrix: ')
+    for i in range(constraint_matrix.shape[0]):
+        print(constraint_matrix[i,:])
     x_train = x[:M_train,:]
+    x_test = x[M_train:,:]
     x0_train = x[0,:]
     x_true = x[M_train:,:]
     x0_test = x[M_train,:]
+ 
+    if r >= 3:
+        linear_r4_mat = np.zeros((r,r+int(r*(r+1)/2)))
+        linear_r4_mat[0,1] = 0.091
+        linear_r4_mat[1,0] = -0.091
+        #linear_r4_mat[2,3] = 0.182
+        #linear_r4_mat[3,2] = -0.182
+        linear_r12_mat = np.zeros((12,90))
+        linear_r12_mat[0,1] = 0.089
+        linear_r12_mat[1,0] = -0.089
+        #linear_r12_mat[2,3] = 0.172
+        #linear_r12_mat[3,2] = -0.172
+        #linear_r12_mat[2,5] = 0.03
+        #linear_r12_mat[5,2] = -0.03
+        #linear_r12_mat[2,6] = 0.022
+        #linear_r12_mat[6,2] = -0.022
+        #linear_r12_mat[6,4] = 0.022
+        #linear_r12_mat[4,6] = 0.023
+        #linear_r12_mat[7,5] = -0.023
+        #linear_r12_mat[5,7] = -0.123
+        #linear_r12_mat[7,5] = 0.123
+        thresholds = threshold * np.ones((r,r + int(r * (r + 1) / 2)))
+    #thresholds[0:2, 2:] = 30 * threshold * np.ones(thresholds[0:2, 2:].shape)
+    #thresholds[r:, 0:2] = 30 * threshold * np.ones(thresholds[r:, 0:2].shape)
+    #thresholds[2:, r:] = 0.25 * threshold * np.ones(thresholds[2:r, r:].shape)
+    #thresholds[4:, 0:r] = 30 * threshold * np.ones(thresholds[4:, 0:r].shape)
+    #thresholds[2:r, :] = 30 * threshold * np.ones(thresholds[2:r, :].shape)
+    #thresholds[r:, 2] = 0.2 * np.ones(thresholds[r:, 2].shape)
+    #thresholds[r:, 3] = 0.05 * np.ones(thresholds[r:, 3].shape)
+    #thresholds[r:, 4:6] = 0.03 * np.ones(thresholds[r:, 4:6].shape)
+    # for run 2
+        #thresholds[0:2, r:] = 30 * threshold * np.ones(thresholds[0:2, r:].shape)
+    #thresholds[2:,:r] = 0.01 * np.ones(thresholds[2:, :r].shape)
+    #thresholds[5, r:] = 0.002 * np.ones(thresholds[5, r:].shape)
+    #thresholds[6:, :] = 0.01 * np.ones(thresholds[6:, :].shape) 
+
+        sindy_opt = ConstrainedSR3(threshold=threshold, nu=10, max_iter=50000, \
+            constraint_lhs=constraint_matrix,constraint_rhs=constraint_zeros, \
+            tol=1e-5,thresholder='weighted_l0',initial_guess=linear_r4_mat,thresholds=thresholds)
+            #tol=1e-5,thresholder='l0',initial_guess=linear_r4_mat)
+        #sindy_opt = ConstrainedSR3(threshold=threshold, nu=10, max_iter=50000, \
+        #    constraint_lhs=constraint_matrix,constraint_rhs=constraint_zeros, \
+        #    tol=1e-5,thresholder='l0',initial_guess=linear_r4_mat)
+        #sindy_opt = ConstrainedSR3(threshold=threshold, nu=10, max_iter=50000, \
+        #    tol=1e-5,thresholder='weighted_l0',initial_guess=linear_r4_mat,thresholds=thresholds)
+        model = SINDy(optimizer=sindy_opt, \
+            feature_library=sindy_library, \
+            differentiation_method=FiniteDifference(drop_endpoints=True), \
+            feature_names=feature_names)
+    else:
+        sindy_opt = ConstrainedSR3(threshold=threshold, nu=10, max_iter=50000, \
+            tol=1e-5,thresholder='l0')
+        model = SINDy(optimizer=sindy_opt, \
+            feature_library=sindy_library, \
+            differentiation_method=FiniteDifference(drop_endpoints=True), \
+            feature_names=feature_names)
+    # Uncomment below for pareto landscape plots 
+    pareto_thresholds = np.linspace(0.0,5.0*threshold,50)
+    #pareto_poly = np.arange(5)
+    #pareto_r = np.arange(8)
+    #print(x_test.shape)
+    pareto_curve(sindy_opt,sindy_library, FiniteDifference,feature_names, \
+        discrete_time=False, n_jobs=1,thresholds=pareto_thresholds,poly_orders=[2],x_fit=x_train,x_pred=x_test,t_fit=t_train,t_pred=t_test, \
+        yscale='Linear')
+    return
+    #exit()
     model.fit(x_train, t=t_train, unbias=False)
     t_cycle = np.linspace(time[M_train],time[M_train]*1.3,int(len(time)/2.0))
     print(model.coefficients())
+    x_train_SINDy,output = model.simulate(x[0,:],t_train, \
+        integrator=odeint,stop_condition=None,full_output=True, \
+        rtol=1e-20,h0=1e-5) #h0=1e-20 
     x_sim,output = model.simulate(x0_test,t_test, \
         integrator=odeint,stop_condition=None,full_output=True, \
         rtol=1e-20,h0=1e-5) #h0=1e-20
@@ -194,7 +267,8 @@ def compressible_Framework(inner_prod,time,poly_order,threshold,r,tfac,SR3Enhanc
     for i in range(r):
         x_sim[:,i] = x_sim[:,i]*sum(np.amax(abs(Vh),axis=1)[0:r])
         x_true[:,i] = x_true[:,i]*sum(np.amax(abs(Vh),axis=1)[0:r])
-    return t_test,x_true,x_sim,S2
+    #return 
+    return t_test,x_true,x_sim,S2,x_train_SINDy
 
 def vector_POD(inner_prod,t_train,r):
     """

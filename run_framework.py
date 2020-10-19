@@ -7,9 +7,10 @@ from sindy_utils import inner_product, \
     plot_density, make_poloidal_movie
 from load_data import \
     load_incompressible_data, load_compressible_data
-from pysindy.optimizers import SR3Enhanced
 from compressible_Framework import compressible_Framework
 from scipy.linalg import eig
+from spod_plotting import plot_spod
+from dmd import dmd, compare_SINDy_DMD
 
 is_incompressible = False
 if is_incompressible:
@@ -33,19 +34,29 @@ if is_incompressible:
     time = np.loadtxt('../time.csv')
     make_3Dphaseplots = False
 else: 
-    r = 7 
+    # for run 2
+    #r = 8 
+    #start = 80000
+    #end = 270000
+    #tfac = 6.0/10.0
+    # for run 1
+    #r = 7 
+    #threshold = 0.05
+    #start = 150000
+    #end = 399000
+    #tfac = 8.0/10.0
+    r = 8
     poly_order = 2
     threshold = 0.05
-    start = 150000
-    end = 399000
+    start = 80000
+    end = 270000    
     skip = 100
-    path_plus_prefix = '../compressible1/HITSI_rMHD_HR'
-    time = np.loadtxt('../compressible1/time.csv')
-    make_3Dphaseplots = False
-contour_animations = True
+    tfac = 8.0/10.0
+    path_plus_prefix = '../compressible2/HITSI_rMHD_HR'
+    time = np.loadtxt('../compressible2/time.csv')
+    make_3Dphaseplots = True
+contour_animations = False
 spacing = float(skip)
-# Fraction of the data to use as training data
-tfac = 8.0/10.0
 # shorten and put into microseconds
 time = time[int(start/spacing):int(end/spacing):int(skip/spacing)]*1e6
 M = len(time)
@@ -92,12 +103,16 @@ R = np.ravel([R,R,R,R,R,R])
 print('D = ',n_samples)
 inner_prod = inner_product(Q,R)*dR*dphi*dZ
 Q = Q*1e4
-t_test,x_true,x_sim,S2 = \
-    compressible_Framework(inner_prod,time,poly_order,threshold,r,tfac,SR3Enhanced,make_3Dphaseplots)
-    #compressible_Framework(Q,inner_prod,time,poly_order,threshold,r,tfac)
+for rr in np.arange(3,20):
+    compressible_Framework(inner_prod,time,poly_order,threshold,rr,tfac,make_3Dphaseplots)
+exit()
+t_test,x_true,x_sim,S2,x_train_SINDy = \
+    compressible_Framework(inner_prod,time,poly_order,threshold,r,tfac,False)
 M_test = len(t_test)
 M_train = int(len(time)*tfac)
-Qorig = Q[:,M_train:]
+t_train = time[:M_train]
+#Q_test = Q[:,:M_train]
+Q_test = Q[:,M_train:]
 Vh_true = np.transpose(x_true)
 Vh_sim = np.transpose(x_sim)
 Sr = np.sqrt(S2[0:r,0:r])
@@ -108,11 +123,37 @@ wr = np.sqrt(np.diag(w))
 # if I use the full spatio-temporal data
 U = Q@(np.transpose(Vh)@(np.linalg.inv(wr)[:,0:12]))
 plot_pod_spatial_modes(X,Y,Z,U)
+#plot_spod(time,Q[0:n_samples,:])
+#exit()
 U_true = U[:,0:r]
 U_sim = U_true
-Q_pod = U_true@wr[0:r,0:r]@Vh_true
+#Q_pod = U_true@wr[0:r,0:r]@Vh_true
 Q_sim = U_sim@wr[0:r,0:r]@Vh_sim
-plot_measurement(Qorig,Q_pod,Q_sim,t_test,r)
+#Qsize = int(np.shape(U_sim)[0]/6)
+#Q_train_SINDy = U_sim[324::Qsize,:]@wr[0:r,0:r]@np.transpose(x_train_SINDy)
+dmd_Q = dmd(Q,100,time,M_train)
+#compare_SINDy_DMD(t_train,t_test,Q[324::Qsize,:M_train],Q_train_SINDy,dmd_Q[:,:M_train],Q_test[324::Qsize,:],Q_sim[324::Qsize,:],dmd_Q[:,M_train:])
+#print(np.shape(dmd_Q),print(dmd_Q))
+#R = np.sqrt(X**2+Y**2)
+#Z0 = np.isclose(Z,np.ones(len(Z))*min(abs(Z)),rtol=1e-3,atol=1e-3)
+#ind_Z0 = [i for i, p in enumerate(Z0) if p]
+#Q_Z0 = Q[ind_Z0,:]
+#SINDy_Q_Z0 = U_sim[ind_Z0,:]@wr[0:r,0:r]@np.transpose(x_sim)
+#DMD_Q_Z0 = dmd_Z0(Q,16,time,M_train)
+make_contour_movie(X,Y,Z,Bx_mat[:,M_train:],np.real(dmd_Q[0*n_samples:1*n_samples,:]/1e4),np.real(Q_sim[0*n_samples:1*n_samples,:]/1e4
+),t_test,'Bx')
+make_contour_movie(X,Y,Z,By_mat[:,M_train:],np.real(dmd_Q[1*n_samples:2*n_samples,:]/1e4),np.real(Q_sim[1*n_samples:2*n_samples,:]/1e4
+),t_test,'By')
+make_contour_movie(X,Y,Z,Bz_mat[:,M_train:],np.real(dmd_Q[2*n_samples:3*n_samples,:]/1e4),np.real(Q_sim[2*n_samples:3*n_samples,:]/1e4
+),t_test,'Bz')
+make_contour_movie(X,Y,Z,Vx_mat[:,M_train:],np.real(dmd_Q[3*n_samples:4*n_samples,:]/1e4),np.real(Q_sim[3*n_samples:4*n_samples,:]/1e4
+),t_test,'Bvx')
+make_contour_movie(X,Y,Z,Vy_mat[:,M_train:],np.real(dmd_Q[4*n_samples:5*n_samples,:]/1e4),np.real(Q_sim[4*n_samples:5*n_samples,:]/1e4
+),t_test,'Bvy')
+make_contour_movie(X,Y,Z,Vz_mat[:,M_train:],np.real(dmd_Q[5*n_samples:6*n_samples,:]/1e4),np.real(Q_sim[5*n_samples:6*n_samples,:]/1e4
+),t_test,'Bvz')
+exit()
+plot_measurement(Q_test,Q_pod,Q_sim,t_test,r)
 if contour_animations:
     Q_pod = Q_pod/1.0e4
     Q_sim = Q_sim/1.0e4
