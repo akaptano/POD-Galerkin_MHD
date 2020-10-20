@@ -29,21 +29,24 @@ from dmd import dmd
       part of the same time series data, and compared with the ground truth,
       a POD reconstruction of the ground truth, and a DMD model.
 
-    Potential issue:
-    quadratic terms will tend to have large coeffficients because
-    of normalizing the dynamics to be on the unit ball. Have been dealing
-    with this by adjusting the thresholds in the PySINDy solvers
     Parameters for simulation 1 in Galerkin paper:
-    r = 7
-    threshold = 0.05
-    start = 150000
-    end = 399000
-    tfac = 8.0/10.0
+        r = 7
+        threshold = 0.05
+        start = 150000
+        end = 399000
+        tfac = 8.0/10.0
     Parameters for simulation 2 in Galerkin paper:
-    r = 8
-    start = 80000
-    end = 270000
-    tfac = 6.0/10.0
+        r = 8
+        start = 80000
+        end = 270000
+        tfac = 6.0/10.0
+
+    Data is available on request.
+
+    Potential issue:
+        quadratic terms will tend to have large coeffficients because
+        of normalizing the dynamics to be on the unit ball. Have been dealing
+        with this by adjusting the thresholds in the PySINDy solvers
 """
 
 # set some flags
@@ -67,7 +70,7 @@ else:
     poly_order = 2
     threshold = 0.05
     start = 80000
-    end = 90000
+    end = 270000
     skip = 100
     tfac = 8.0/10.0
     path_plus_prefix = '../compressible2/HITSI_rMHD_HR'

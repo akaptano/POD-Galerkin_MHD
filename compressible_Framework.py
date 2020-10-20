@@ -1,13 +1,10 @@
 import numpy as np
 from pysindy import SINDy
-from pysindy.feature_library import PolynomialLibrary, CustomLibrary
-from pysindy.differentiation import FiniteDifference, SmoothedFiniteDifference
-import sindy_utils
+from pysindy.feature_library import CustomLibrary
+from pysindy.differentiation import FiniteDifference
 from sindy_utils import *
 from scipy.integrate import odeint
 from scipy.linalg import eig
-from matplotlib import pyplot as plt
-from numpy.random import random
 from pysindy.utils.pareto import pareto_curve
 from pysindy.optimizers import ConstrainedSR3
 
@@ -76,8 +73,6 @@ def compressible_Framework(inner_prod, time, poly_order, threshold,
         The singular value matrix
 
     """
-    plt.clf()
-    plt.close('all')
     M_train = int(len(time)*tfac)
     t_train = time[:M_train]
     t_test = time[M_train:]
@@ -137,7 +132,11 @@ def compressible_Framework(inner_prod, time, poly_order, threshold,
             # constraint_matrix = np.zeros((int(r*(r+1)/2)+r+r*(r-1)+
             #                     int(r*(r-1)*(r-2)/6.0), int(r*(r**2+3*r)/2)))
 
-        # Future work: constraint for models with poly_order > 2
+        # Easy addition: the linear model constraint for models with
+        #                poly_order > 2 is the same because the linear
+        #                coefficients are still "in the same place". Just need
+        #                to make constraint_zeros and constraint_matrix
+        #                the correct size for the given r and poly_order.
 
         # Set the diagonal part of the linear coefficient matrix to be zero
         for i in range(r):
@@ -197,52 +196,61 @@ def compressible_Framework(inner_prod, time, poly_order, threshold,
 
     if r >= 3:
         linear_r4_mat = np.zeros((r, r+int(r*(r+1)/2)))
-        linear_r4_mat[0,1] = 0.091
-        linear_r4_mat[1,0] = -0.091
-        #linear_r4_mat[2,3] = 0.182
-        #linear_r4_mat[3,2] = -0.182
-        linear_r12_mat = np.zeros((12,90))
-        linear_r12_mat[0,1] = 0.089
-        linear_r12_mat[1,0] = -0.089
-        #linear_r12_mat[2,3] = 0.172
-        #linear_r12_mat[3,2] = -0.172
-        #linear_r12_mat[2,5] = 0.03
-        #linear_r12_mat[5,2] = -0.03
-        #linear_r12_mat[2,6] = 0.022
-        #linear_r12_mat[6,2] = -0.022
-        #linear_r12_mat[6,4] = 0.022
-        #linear_r12_mat[4,6] = 0.023
-        #linear_r12_mat[7,5] = -0.023
-        #linear_r12_mat[5,7] = -0.123
-        #linear_r12_mat[7,5] = 0.123
+        linear_r4_mat[0, 1] = 0.091
+        linear_r4_mat[1, 0] = -0.091
+        # linear_r4_mat[2, 3] = 0.182
+        # linear_r4_mat[3, 2] = -0.182
         thresholds = threshold * np.ones((r, r + int(r * (r + 1) / 2)))
-    #thresholds[0:2, 2:] = 30 * threshold * np.ones(thresholds[0:2, 2:].shape)
-    #thresholds[r:, 0:2] = 30 * threshold * np.ones(thresholds[r:, 0:2].shape)
-    #thresholds[2:, r:] = 0.25 * threshold * np.ones(thresholds[2:r, r:].shape)
-    #thresholds[4:, 0:r] = 30 * threshold * np.ones(thresholds[4:, 0:r].shape)
-    #thresholds[2:r, :] = 30 * threshold * np.ones(thresholds[2:r, :].shape)
-    #thresholds[r:, 2] = 0.2 * np.ones(thresholds[r:, 2].shape)
-    #thresholds[r:, 3] = 0.05 * np.ones(thresholds[r:, 3].shape)
-    #thresholds[r:, 4:6] = 0.03 * np.ones(thresholds[r:, 4:6].shape)
-    # for run 2
-        #thresholds[0:2, r:] = 30 * threshold * np.ones(thresholds[0:2, r:].shape)
-    #thresholds[2:, :r] = 0.01 * np.ones(thresholds[2:, :r].shape)
-    #thresholds[5, r:] = 0.002 * np.ones(thresholds[5, r:].shape)
-    #thresholds[6:, :] = 0.01 * np.ones(thresholds[6:, :].shape)
+        # For run 1
+        # thresholds[0:2, 2:] = 30 * threshold * np.ones(
+        #                            thresholds[0:2, 2:].shape)
+        # thresholds[r:, 0:2] = 30 * threshold * np.ones(
+        #                            thresholds[r:, 0:2].shape)
+        # thresholds[2:, r:] = 0.25 * threshold * np.ones(
+        #                             thresholds[2:r, r:].shape)
+        # thresholds[4:, 0:r] = 30 * threshold * np.ones(
+        #                            thresholds[4:, 0:r].shape)
+        # thresholds[2:r, :] = 30 * threshold * np.ones(
+        #                           thresholds[2:r, :].shape)
+        # thresholds[r:, 2] = 0.2 * np.ones(thresholds[r:, 2].shape)
+        # thresholds[r:, 3] = 0.05 * np.ones(thresholds[r:, 3].shape)
+        # thresholds[r:, 4:6] = 0.03 * np.ones(thresholds[r:, 4:6].shape)
+        # For run 2
+        # thresholds[0:2, r:] = 30 * threshold * np.ones(
+        #                            thresholds[0:2, r:].shape)
+        # thresholds[2:, :r] = 0.01 * np.ones(thresholds[2:, :r].shape)
+        # thresholds[5, r:] = 0.002 * np.ones(thresholds[5, r:].shape)
+        # thresholds[6:, :] = 0.01 * np.ones(thresholds[6:, :].shape)
 
-        sindy_opt = ConstrainedSR3(threshold=threshold, nu=10, max_iter=50000, \
-            constraint_lhs=constraint_matrix,constraint_rhs=constraint_zeros, \
-            tol=1e-5, thresholder='weighted_l0', initial_guess=linear_r4_mat, thresholds=thresholds)
-            #tol=1e-5, thresholder='l0', initial_guess=linear_r4_mat)
-        #sindy_opt = ConstrainedSR3(threshold=threshold, nu=10, max_iter=50000, \
-        #    constraint_lhs=constraint_matrix,constraint_rhs=constraint_zeros, \
-        #    tol=1e-5, thresholder='l0', initial_guess=linear_r4_mat)
-        #sindy_opt = ConstrainedSR3(threshold=threshold, nu=10, max_iter=50000, \
-        #    tol=1e-5, thresholder='weighted_l0', initial_guess=linear_r4_mat, thresholds=thresholds)
-        model = SINDy(optimizer=sindy_opt, \
-            feature_library=sindy_library, \
-            differentiation_method=FiniteDifference(drop_endpoints=True), \
-            feature_names=feature_names)
+        # Multiple-threshold constrained optimizer
+
+        sindy_opt = ConstrainedSR3(threshold=threshold, nu=10, max_iter=50000,
+                                   constraint_lhs=constraint_matrix,
+                                   constraint_rhs=constraint_zeros, tol=1e-5,
+                                   thresholder='weighted_l0',
+                                   initial_guess=linear_r4_mat,
+                                   thresholds=thresholds)
+
+        # Single threshold constrained optimizer
+
+        # sindy_opt = ConstrainedSR3(threshold=threshold, nu=10,
+        #                            max_iter=50000,
+        #                            constraint_lhs=constraint_matrix,
+        #                            constraint_rhs=constraint_zeros,
+        #                            tol=1e-5, thresholder='l0',
+        #                            initial_guess=linear_r4_mat)
+
+        # Unconstrained optimizer
+
+        # sindy_opt = ConstrainedSR3(threshold=threshold, nu=10,
+        #                           max_iter=50000,
+        #                           tol=1e-5, thresholder='weighted_l0',
+        #                           initial_guess=linear_r4_mat,
+        #                           thresholds=thresholds)
+        model = SINDy(optimizer=sindy_opt, feature_library=sindy_library,
+                      differentiation_method=FiniteDifference(
+                                                drop_endpoints=True),
+                      feature_names=feature_names)
     else:
         sindy_opt = ConstrainedSR3(threshold=threshold, nu=10, max_iter=50000,
                                    tol=1e-5, thresholder='l0')
@@ -263,37 +271,31 @@ def compressible_Framework(inner_prod, time, poly_order, threshold,
 
     # Otherwise, continue with the fitting and plotting
     model.fit(x_train, t=t_train, unbias=False)
-    t_cycle = np.linspace(time[M_train], time[M_train]*1.3, int(len(time)/2.0))
     print(model.coefficients())
-    x_train_SINDy,output = model.simulate(x[0, :], t_train, \
-        integrator=odeint, stop_condition=None, full_output=True, \
-        rtol=1e-20,h0=1e-5) #h0=1e-20
-    x_sim,output = model.simulate(x0_test, t_test, \
-        integrator=odeint, stop_condition=None, full_output=True, \
-        rtol=1e-20,h0=1e-5) #h0=1e-20
-    x_sim1,output = model.simulate(-0.4*np.ones(r), t_cycle, \
-        integrator=odeint, stop_condition=None, full_output=True, \
-        rtol=1e-20,h0=1e-5)
-    x_sim2,output = model.simulate(0.15*np.ones(r), t_cycle, \
-        integrator=odeint, stop_condition=None, full_output=True, \
-        rtol=1e-20,h0=1e-5)
+    x_train_SINDy, output = model.simulate(x[0, :], t_train, integrator=odeint,
+                                           stop_condition=None,
+                                           full_output=True,
+                                           rtol=1e-20, h0=1e-5)
+    x_sim, output = model.simulate(x0_test, t_test, integrator=odeint,
+                                   stop_condition=None, full_output=True,
+                                   rtol=1e-20, h0=1e-5)
     x_dot = model.differentiate(x, t=time)
     x_dot_train = model.predict(x_train)
     x_dot_sim = model.predict(x_true)
     print('Model score: %f' % model.score(x, t=time))
-    make_evo_plots(x_dot, x_dot_train, \
-        x_dot_sim, x_true, x_sim, time, t_train, t_test)
+    make_evo_plots(x_dot, x_dot_train, x_dot_sim,
+                   x_true, x_sim, time, t_train, t_test)
     make_table(model, feature_names)
 
     # Makes 3D plots of the a_i, a_j, a_k state space
     if do_manifoldplots:
-        make_3d_plots(x_true, x_sim, t_test,'sim',0,1,2)
-        make_3d_plots(x_true, x_sim, t_test,'sim',0,1,3)
-        make_3d_plots(x_true, x_sim, t_test,'sim',0,1,4)
-        make_3d_plots(x_true, x_sim, t_test,'sim',0,1,5)
-        make_3d_plots(x_true, x_sim, t_test,'sim',0,1,6)
-        make_3d_plots(x_true, x_sim, t_test,'sim',3,4,5)
-        make_3d_plots(x_true, x_sim, t_test,'sim',4,5,6)
+        make_3d_plots(x_true, x_sim, t_test, 'sim', 0, 1, 2)
+        make_3d_plots(x_true, x_sim, t_test, 'sim', 0, 1, 3)
+        make_3d_plots(x_true, x_sim, t_test, 'sim', 0, 1, 4)
+        make_3d_plots(x_true, x_sim, t_test, 'sim', 0, 1, 5)
+        make_3d_plots(x_true, x_sim, t_test, 'sim', 0, 1, 6)
+        make_3d_plots(x_true, x_sim, t_test, 'sim', 3, 4, 5)
+        make_3d_plots(x_true, x_sim, t_test, 'sim', 4, 5, 6)
     for i in range(r):
         x_sim[:, i] = x_sim[:, i]*sum(np.amax(abs(Vh), axis=1)[0:r])
         x_true[:, i] = x_true[:, i]*sum(np.amax(abs(Vh), axis=1)[0:r])
