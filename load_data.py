@@ -4,13 +4,14 @@ mu0 = 4*pi*1e-7
 rho = 2.0e19*2*1.67*1e-27
 mion = 2*1.67*1e-27
 
-def load_incompressible_data(start,end,skip,path_plus_prefix):
+
+def load_incompressible_data(start, end, skip, path_plus_prefix):
     """
-    Performs the entire vector_POD + SINDy framework for a given polynomial
-    order and thresholding for the SINDy method.
+    Loads in the incompressible MHD simulations
 
     Parameters
     ----------
+
     start: int
     (1)
         Time index for t = 0
@@ -74,24 +75,24 @@ def load_incompressible_data(start,end,skip,path_plus_prefix):
     Vx_mat = []
     Vy_mat = []
     Vz_mat = []
-    for i in range(start,end,skip):
+    for i in range(start, end, skip):
         if i % 10 == 0:
             print(i)
         if i < 10:
             Bx, By, Bz, Vx, Vy, Vz = \
-                np.loadtxt(path_plus_prefix+'_0000'+str(i)+'.csv',delimiter=',',usecols=(3,4,5,15,16,17),unpack=True)
+                np.loadtxt(path_plus_prefix+'_0000'+str(i)+'.csv', delimiter=',', usecols=(3,4,5,15,16,17), unpack=True)
         elif i < 100:
             Bx, By, Bz, Vx, Vy, Vz = \
-                np.loadtxt(path_plus_prefix+'_000'+str(i)+'.csv',delimiter=',',usecols=(3,4,5,15,16,17),unpack=True)
+                np.loadtxt(path_plus_prefix+'_000'+str(i)+'.csv', delimiter=',', usecols=(3,4,5,15,16,17), unpack=True)
         elif i < 1000:
             Bx, By, Bz, Vx, Vy, Vz = \
-                np.loadtxt(path_plus_prefix+'_00'+str(i)+'.csv',delimiter=',',usecols=(3,4,5,15,16,17),unpack=True)
+                np.loadtxt(path_plus_prefix+'_00'+str(i)+'.csv', delimiter=',', usecols=(3,4,5,15,16,17), unpack=True)
         elif i < 10000:
             Bx, By, Bz, Vx, Vy, Vz = \
-                np.loadtxt(path_plus_prefix+'_0'+str(i)+'.csv',delimiter=',',usecols=(3,4,5,15,16,17),unpack=True)
+                np.loadtxt(path_plus_prefix+'_0'+str(i)+'.csv', delimiter=',', usecols=(3,4,5,15,16,17), unpack=True)
         else:
             Bx, By, Bz, Vx, Vy, Vz = \
-                np.loadtxt(path_plus_prefix+'_'+str(i)+'.csv',delimiter=',',usecols=(3,4,5,15,16,17),unpack=True)
+                np.loadtxt(path_plus_prefix+'_'+str(i)+'.csv', delimiter=',', usecols=(3,4,5,15,16,17), unpack=True)
         Bx_mat.append(Bx)
         By_mat.append(By)
         Bz_mat.append(Bz)
@@ -108,34 +109,36 @@ def load_incompressible_data(start,end,skip,path_plus_prefix):
     Bx_mat = Bx_mat
     By_mat = By_mat
     Bz_mat = Bz_mat
-    bx_avg = np.mean(Bx_mat,0)
-    by_avg = np.mean(By_mat,0)
-    bz_avg = np.mean(Bz_mat,0)
-    vx_avg = np.mean(Vx_mat,0)
-    vy_avg = np.mean(Vy_mat,0)
-    vz_avg = np.mean(Vz_mat,0)
+    # Subtract off temporal average
+    bx_avg = np.mean(Bx_mat, 0)
+    by_avg = np.mean(By_mat, 0)
+    bz_avg = np.mean(Bz_mat, 0)
+    vx_avg = np.mean(Vx_mat, 0)
+    vy_avg = np.mean(Vy_mat, 0)
+    vz_avg = np.mean(Vz_mat, 0)
     for i in range(np.shape(Bx_mat)[0]):
-        Bx_mat[i,:] = Bx_mat[i,:] - bx_avg
-        By_mat[i,:] = By_mat[i,:] - by_avg
-        Bz_mat[i,:] = Bz_mat[i,:] - bz_avg
-        Vx_mat[i,:] = Vx_mat[i,:] - vx_avg
-        Vy_mat[i,:] = Vy_mat[i,:] - vy_avg
-        Vz_mat[i,:] = Vz_mat[i,:] - vz_avg
+        Bx_mat[i, :] = Bx_mat[i, :] - bx_avg
+        By_mat[i, :] = By_mat[i, :] - by_avg
+        Bz_mat[i, :] = Bz_mat[i, :] - bz_avg
+        Vx_mat[i, :] = Vx_mat[i, :] - vx_avg
+        Vy_mat[i, :] = Vy_mat[i, :] - vy_avg
+        Vz_mat[i, :] = Vz_mat[i, :] - vz_avg
     Bx_mat = np.transpose(Bx_mat)
     By_mat = np.transpose(By_mat)
     Bz_mat = np.transpose(Bz_mat)
     Vx_mat = np.transpose(Vx_mat)
     Vy_mat = np.transpose(Vy_mat)
     Vz_mat = np.transpose(Vz_mat)
-    return Bx_mat,By_mat,Bz_mat,Vx_mat,Vy_mat,Vz_mat
+    return Bx_mat, By_mat, Bz_mat, Vx_mat, Vy_mat, Vz_mat
 
-def load_compressible_data(start,end,skip,path_plus_prefix):
+
+def load_compressible_data(start, end, skip, path_plus_prefix):
     """
-    Performs the entire vector_POD + SINDy framework for a given polynomial
-    order and thresholding for the SINDy method.
+    Loads in the compressible MHD simulations
 
     Parameters
     ----------
+
     start: int
     (1)
         Time index for t = 0
@@ -205,24 +208,24 @@ def load_compressible_data(start,end,skip,path_plus_prefix):
     Vy_mat = []
     Vz_mat = []
     dens_mat = []
-    for i in range(start,end,skip):
+    for i in range(start, end, skip):
         if i % 10 == 0:
             print(i)
         if i < 10:
             Bx, By, Bz, Vx, Vy, Vz, dens = \
-                np.loadtxt(path_plus_prefix+'_0000'+str(i)+'.csv',delimiter=',',usecols=(3,4,5,6,7,8,9),unpack=True)
+                np.loadtxt(path_plus_prefix+'_0000'+str(i)+'.csv', delimiter=',', usecols=(3,4,5,6,7,8,9), unpack=True)
         elif i < 100:
             Bx, By, Bz, Vx, Vy, Vz, dens = \
-                np.loadtxt(path_plus_prefix+'_000'+str(i)+'.csv',delimiter=',',usecols=(3,4,5,6,7,8,9),unpack=True)
+                np.loadtxt(path_plus_prefix+'_000'+str(i)+'.csv', delimiter=',', usecols=(3,4,5,6,7,8,9), unpack=True)
         elif i < 1000:
             Bx, By, Bz, Vx, Vy, Vz, dens = \
-                np.loadtxt(path_plus_prefix+'_00'+str(i)+'.csv',delimiter=',',usecols=(3,4,5,6,7,8,9),unpack=True)
+                np.loadtxt(path_plus_prefix+'_00'+str(i)+'.csv', delimiter=',', usecols=(3,4,5,6,7,8,9), unpack=True)
         elif i < 10000:
             Bx, By, Bz, Vx, Vy, Vz, dens = \
-                np.loadtxt(path_plus_prefix+'_0'+str(i)+'.csv',delimiter=',',usecols=(3,4,5,6,7,8,9),unpack=True)
+                np.loadtxt(path_plus_prefix+'_0'+str(i)+'.csv', delimiter=',', usecols=(3,4,5,6,7,8,9), unpack=True)
         else:
             Bx, By, Bz, Vx, Vy, Vz, dens = \
-                np.loadtxt(path_plus_prefix+'_'+str(i)+'.csv',delimiter=',',usecols=(3,4,5,6,7,8,9),unpack=True)
+                np.loadtxt(path_plus_prefix+'_'+str(i)+'.csv', delimiter=',', usecols=(3,4,5,6,7,8,9), unpack=True)
         Bx_mat.append(Bx)
         By_mat.append(By)
         Bz_mat.append(Bz)
@@ -234,26 +237,27 @@ def load_compressible_data(start,end,skip,path_plus_prefix):
     Bx_mat = np.array(Bx_mat)
     By_mat = np.array(By_mat)
     Bz_mat = np.array(Bz_mat)
-    #scale to Bv
+    # scale to Bv
     Vx_mat = np.sqrt(mu0*mion*dens_mat)*np.array(Vx_mat)
     Vy_mat = np.sqrt(mu0*mion*dens_mat)*np.array(Vy_mat)
     Vz_mat = np.sqrt(mu0*mion*dens_mat)*np.array(Vz_mat)
     Bx_mat = Bx_mat
     By_mat = By_mat
     Bz_mat = Bz_mat
-    bx_avg = np.mean(Bx_mat,0)
-    by_avg = np.mean(By_mat,0)
-    bz_avg = np.mean(Bz_mat,0)
-    vx_avg = np.mean(Vx_mat,0)
-    vy_avg = np.mean(Vy_mat,0)
-    vz_avg = np.mean(Vz_mat,0)
+    # subtract off the temporal average
+    bx_avg = np.mean(Bx_mat, 0)
+    by_avg = np.mean(By_mat, 0)
+    bz_avg = np.mean(Bz_mat, 0)
+    vx_avg = np.mean(Vx_mat, 0)
+    vy_avg = np.mean(Vy_mat, 0)
+    vz_avg = np.mean(Vz_mat, 0)
     for i in range(np.shape(Bx_mat)[0]):
-        Bx_mat[i,:] = Bx_mat[i,:] - bx_avg
-        By_mat[i,:] = By_mat[i,:] - by_avg
-        Bz_mat[i,:] = Bz_mat[i,:] - bz_avg
-        Vx_mat[i,:] = Vx_mat[i,:] - vx_avg
-        Vy_mat[i,:] = Vy_mat[i,:] - vy_avg
-        Vz_mat[i,:] = Vz_mat[i,:] - vz_avg
+        Bx_mat[i, :] = Bx_mat[i, :] - bx_avg
+        By_mat[i, :] = By_mat[i, :] - by_avg
+        Bz_mat[i, :] = Bz_mat[i, :] - bz_avg
+        Vx_mat[i, :] = Vx_mat[i, :] - vx_avg
+        Vy_mat[i, :] = Vy_mat[i, :] - vy_avg
+        Vz_mat[i, :] = Vz_mat[i, :] - vz_avg
     Bx_mat = np.transpose(Bx_mat)
     By_mat = np.transpose(By_mat)
     Bz_mat = np.transpose(Bz_mat)
@@ -261,4 +265,4 @@ def load_compressible_data(start,end,skip,path_plus_prefix):
     Vy_mat = np.transpose(Vy_mat)
     Vz_mat = np.transpose(Vz_mat)
     dens_mat = np.transpose(dens_mat)
-    return Bx_mat,By_mat,Bz_mat,Vx_mat,Vy_mat,Vz_mat,dens_mat
+    return Bx_mat, By_mat, Bz_mat, Vx_mat, Vy_mat, Vz_mat, dens_mat
