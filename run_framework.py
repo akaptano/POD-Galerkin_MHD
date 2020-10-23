@@ -53,7 +53,7 @@ from dmd import dmd
 is_incompressible = False
 do_pareto = False
 do_contouranimations = True
-do_manifoldplots = False
+do_manifoldplots = True
 
 # set some of the model and SINDy hyperparameters
 if is_incompressible:
@@ -72,7 +72,7 @@ else:
     start = 80000
     end = 270000
     skip = 100
-    tfac = 8.0/10.0
+    tfac = 6.0/10.0
     path_plus_prefix = '../compressible2/HITSI_rMHD_HR'
     time = np.loadtxt('../compressible2/time.csv')
 
@@ -126,7 +126,7 @@ Q = Q*1e4  # convert from Tesla to Gauss
 # This generates a pareto landscape in (r, lambda), which is a useful
 # way to visualize the space of possible SINDy models.
 if do_pareto:
-    for rr in np.arange(3, 20):
+    for rr in np.arange(3, 6):
         compressible_Framework(inner_prod, time, poly_order,
                                threshold, rr, tfac,
                                do_manifoldplots, True)

@@ -73,11 +73,20 @@ def compressible_Framework(inner_prod, time, poly_order, threshold,
         The singular value matrix
 
     """
+
+    # Define a portion of the data for training and for testing
     M_train = int(len(time)*tfac)
     t_train = time[:M_train]
     t_test = time[M_train:]
+
+    # Compute the dimensionalize POD to get the temporal POD modes in x
     x, feature_names, S2, Vh, = vector_POD(inner_prod, time, r)
-    print('Now fitting SINDy model')
+
+    # Depending on poly_order, define a custom library of functions and
+    # associated function names. This is necessary because we are excluding
+    # the constant term, and because the order of the quadratic library
+    # terms needs to be a_1a_2,...,a_{r-1}a_r, a_1^2, ..., a_r^2 for the
+    # constraint indexing to work.
     if poly_order == 1:
         library_functions = [lambda x:x]
         library_function_names = [lambda x:x]
@@ -109,6 +118,7 @@ def compressible_Framework(inner_prod, time, poly_order, threshold,
                             library_functions=library_functions,
                             function_names=library_function_names)
 
+    # Now set the constraint on the linear and/or quadratic model terms.
     constraint_zeros = np.zeros(int(r*(r+1)/2))
     # constraint vector below is for a quadratic model constraint
     # constraint_zeros = np.zeros(int(r*(r+1)/2)+
@@ -183,17 +193,14 @@ def compressible_Framework(inner_prod, time, poly_order, threshold,
         #                 q, r*(r+j-1)+k+r*int(i*(2*r-i-3)/2.0)] = 1.0
         #             q = q + 1
 
-    # linear_r4_mat or linear_r12_mat are initial guesses
-    # for the optimization
-    print('Constraint matrix: ')
-    for i in range(constraint_matrix.shape[0]):
-        print(constraint_matrix[i, :])
+    # split the temporal POD modes into testing and training
     x_train = x[:M_train, :]
     x_test = x[M_train:, :]
     x0_train = x[0, :]
     x_true = x[M_train:, :]
     x0_test = x[M_train, :]
 
+    # Set the SINDy optimizer parameters and define the SINDy model
     if r >= 3:
         linear_r4_mat = np.zeros((r, r+int(r*(r+1)/2)))
         linear_r4_mat[0, 1] = 0.091
@@ -215,12 +222,12 @@ def compressible_Framework(inner_prod, time, poly_order, threshold,
         # thresholds[r:, 2] = 0.2 * np.ones(thresholds[r:, 2].shape)
         # thresholds[r:, 3] = 0.05 * np.ones(thresholds[r:, 3].shape)
         # thresholds[r:, 4:6] = 0.03 * np.ones(thresholds[r:, 4:6].shape)
+        #
         # For run 2
-        # thresholds[0:2, r:] = 30 * threshold * np.ones(
-        #                            thresholds[0:2, r:].shape)
-        # thresholds[2:, :r] = 0.01 * np.ones(thresholds[2:, :r].shape)
-        # thresholds[5, r:] = 0.002 * np.ones(thresholds[5, r:].shape)
-        # thresholds[6:, :] = 0.01 * np.ones(thresholds[6:, :].shape)
+        thresholds[0:2, r:] = 30 * threshold*np.ones(thresholds[0:2, r:].shape)
+        thresholds[2:, :r] = 0.01 * np.ones(thresholds[2:, :r].shape)
+        thresholds[5, r:] = 0.002 * np.ones(thresholds[5, r:].shape)
+        thresholds[6:, :] = 0.01 * np.ones(thresholds[6:, :].shape)
 
         # Multiple-threshold constrained optimizer
 
@@ -247,6 +254,7 @@ def compressible_Framework(inner_prod, time, poly_order, threshold,
         #                           tol=1e-5, thresholder='weighted_l0',
         #                           initial_guess=linear_r4_mat,
         #                           thresholds=thresholds)
+
         model = SINDy(optimizer=sindy_opt, feature_library=sindy_library,
                       differentiation_method=FiniteDifference(
                                                 drop_endpoints=True),
@@ -265,7 +273,7 @@ def compressible_Framework(inner_prod, time, poly_order, threshold,
         pareto_curve(sindy_opt, sindy_library, FiniteDifference, feature_names,
                      discrete_time=False, n_jobs=1,
                      thresholds=pareto_thresholds,
-                     poly_orders=[2], x_fit=x_train, x_pred=x_test,
+                     x_fit=x_train, x_pred=x_test,
                      t_fit=t_train, t_pred=t_test)
         return
 
@@ -283,8 +291,12 @@ def compressible_Framework(inner_prod, time, poly_order, threshold,
     x_dot_train = model.predict(x_train)
     x_dot_sim = model.predict(x_true)
     print('Model score: %f' % model.score(x, t=time))
+
+    # Plot the comparison between true and predicted POD mode evolutions
     make_evo_plots(x_dot, x_dot_train, x_dot_sim,
                    x_true, x_sim, time, t_train, t_test)
+
+    # Make a table of the identified model coefficients
     make_table(model, feature_names)
 
     # Makes 3D plots of the a_i, a_j, a_k state space
@@ -296,9 +308,12 @@ def compressible_Framework(inner_prod, time, poly_order, threshold,
         make_3d_plots(x_true, x_sim, t_test, 'sim', 0, 1, 6)
         make_3d_plots(x_true, x_sim, t_test, 'sim', 3, 4, 5)
         make_3d_plots(x_true, x_sim, t_test, 'sim', 4, 5, 6)
+
+    # Rescale back to original units
     for i in range(r):
         x_sim[:, i] = x_sim[:, i]*sum(np.amax(abs(Vh), axis=1)[0:r])
         x_true[:, i] = x_true[:, i]*sum(np.amax(abs(Vh), axis=1)[0:r])
+
     return t_test, x_true, x_sim, S2, x_train_SINDy
 
 
@@ -344,22 +359,28 @@ def vector_POD(inner_prod, t_train, r):
         with the original measurements
 
     """
+
+    # Compute eigenvalue decomposition of <Q,Q> and sort by largest eigenvalues
     S2, v = eig(inner_prod)
     idx = S2.argsort()[::-1]
     S2 = S2[idx]
     v = v[:, idx]
     Vh = np.transpose(v)
+
+    # Plot temporal eigenvectors and associated eigenvalues
     plot_pod_temporal_modes(v[:, 0:12], t_train)
     plot_BOD_Espectrum(S2)
     print("% field in first r modes = ",
           sum(np.sqrt(S2[0:r]))/sum(np.sqrt(S2)))
     print("% energy in first r modes = ", sum(S2[0:r])/sum(S2))
+
+    # Reshape some things and normalize the temporal modes for SINDy
     S2 = np.diag(S2)
     vh = np.zeros((r, np.shape(Vh)[1]))
     feature_names = []
-    # normalize the modes
     for i in range(r):
         vh[i, :] = Vh[i, :]/sum(np.amax(abs(Vh), axis=1)[0:r])
         feature_names.append(r'$\varphi_{:d}$'.format(i+1))
     x = np.transpose(vh)
+
     return x, feature_names, S2, Vh

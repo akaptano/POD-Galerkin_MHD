@@ -6,6 +6,7 @@ from scipy.interpolate import griddata
 from scipy.integrate import simps
 import matplotlib.animation as animation
 import matplotlib.gridspec as gridspec
+from random import randint
 
 
 def inner_product(Q, R):
@@ -72,88 +73,32 @@ def plot_measurement(Qorig, Q_pod, Q_sim, t_test, r):
         Truncation number of the SVD
 
     """
+
+    # Pick a random probe and plot the performance
+    # of the model prediction for each of Bx, By, Bz, Bvx, Bvy, Bvz
     Qsize = int(np.shape(Qorig)[0]/6)
     plt.figure(figsize=(7, 9))
-    plt.subplot(6, 1, 1)
-    plt.plot(t_test/1.0e3, Qorig[324, :], 'k', linewidth=2, label='True')
-    # plt.plot(t_test/1.0e3, Q_pod[324, :],
-    #           'k--', linewidth=2, label='True, r='+str(r))
-    plt.plot(t_test/1.0e3, Q_sim[324, :],
-             color='r', linewidth=2, label='Model, r='+str(r))
-    plt.grid(True)
-    plt.ylim(-350, 350)
-    ax = plt.gca()
-    ax.set_xticklabels([])
-    ax.tick_params(axis='both', which='major', labelsize=18)
-    ax.tick_params(axis='both', which='minor', labelsize=18)
-    plt.subplot(6, 1, 2)
-    plt.plot(t_test/1.0e3, Qorig[324+1*Qsize, :], 'k',
-             linewidth=2, label=r'True $B_y$')
-    # plt.plot(t_test/1.0e3, Q_pod[324+1*Qsize, :],'k--',
-    #          linewidth=2, label=r'True $B_y$ with r='+str(r)+' truncation')
-    plt.plot(t_test/1.0e3, Q_sim[324+1*Qsize, :], color='r',
-             linewidth=2, label=r'Model $B_y$ with r='+str(r)+' truncation')
-    plt.grid(True)
-    plt.ylim(-700, 700)
-    ax = plt.gca()
-    ax.set_xticklabels([])
-    ax.tick_params(axis='both', which='major', labelsize=18)
-    ax.tick_params(axis='both', which='minor', labelsize=18)
-    plt.subplot(6, 1, 3)
-    plt.plot(t_test/1.0e3, Qorig[324+2*Qsize, :], 'k',
-             linewidth=2, label=r'True $B_z$')
-    # plt.plot(t_test/1.0e3, Q_pod[324+2*Qsize, :],'k--',
-    #          linewidth=2, label=r'True $B_z$ with r='+str(r)+' truncation')
-    plt.plot(t_test/1.0e3, Q_sim[324+2*Qsize, :], color='r',
-             linewidth=2, label=r'Model $B_z$ with r='+str(r)+' truncation')
-    plt.grid(True)
-    plt.ylim(-200, 200)
-    ax = plt.gca()
-    ax.set_xticklabels([])
-    ax.tick_params(axis='both', which='major', labelsize=18)
-    ax.tick_params(axis='both', which='minor', labelsize=18)
-    plt.subplot(6, 1, 4)
-    plt.plot(t_test/1.0e3, Qorig[324+3*Qsize, :], 'k',
-             linewidth=2, label=r'True $V_x$')
-    # plt.plot(t_test/1.0e3, Q_pod[324+3*Qsize, :],'k--',
-    #          linewidth=2, label=r'True $V_x$ with r='+str(r)+' truncation')
-    plt.plot(t_test/1.0e3, Q_sim[324+3*Qsize, :], color='r',
-             linewidth=2, label=r'Model $V_x$ with r='+str(r)+' truncation')
-    plt.grid(True)
-    plt.ylim(-60, 60)
-    ax = plt.gca()
-    ax.set_xticklabels([])
-    ax.tick_params(axis='both', which='major', labelsize=18)
-    ax.tick_params(axis='both', which='minor', labelsize=18)
-    plt.subplot(6, 1, 5)
-    plt.plot(t_test/1.0e3, Qorig[324+4*Qsize, :], 'k',
-             linewidth=2, label=r'True $V_y$')
-    # plt.plot(t_test/1.0e3, Q_pod[324+4*Qsize, :],'k--',
-    #          linewidth=2, label=r'True $V_y$ with r='+str(r)+' truncation')
-    plt.plot(t_test/1.0e3, Q_sim[324+4*Qsize, :], color='r',
-             linewidth=2, label=r'Model $V_y$ with r='+str(r)+' truncation')
-    plt.grid(True)
-    plt.ylim(-40, 40)
-    ax = plt.gca()
-    ax.set_xticklabels([])
-    ax.tick_params(axis='both', which='major', labelsize=18)
-    ax.tick_params(axis='both', which='minor', labelsize=18)
-    plt.subplot(6, 1, 6)
-    plt.plot(t_test/1.0e3, Qorig[324+5*Qsize, :], 'k',
-             linewidth=2, label=r'True $V_z$')
-    # plt.plot(t_test/1.0e3, Q_pod[324+5*Qsize, :],'k--',
-    #          linewidth=2, label=r'True $V_z$ with r='+str(r)+' truncation')
-    plt.plot(t_test/1.0e3, Q_sim[324+5*Qsize, :], color='r',
-             linewidth=2, label=r'Model $V_z$ with r='+str(r)+' truncation')
-    plt.grid(True)
-    plt.ylim(-25, 25)
-    ax = plt.gca()
-    ax.tick_params(axis='both', which='major', labelsize=18)
-    ax.tick_params(axis='both', which='minor', labelsize=18)
-    plt.savefig('Pictures/probe_measurement.png', dpi=100)
+    rint = randint(0, Qsize-1)
+    t_test = t_test/1.0e3
+
+    # Loop through the field components
+    for i in range(6):
+        plt.subplot(6, 1, i + 1)
+        plt.plot(t_test, Qorig[rint + i*Qsize, :],
+                 'k', linewidth=2, label='True')
+        # plt.plot(t_test/1.0e3, Q_pod[rint, :],
+        #           'k--', linewidth=2, label='True, r='+str(r))
+        plt.plot(t_test, Q_sim[rint, :],
+                 color='r', linewidth=2, label='Model, r='+str(r))
+        plt.grid(True)
+        plt.ylim(min(Q_sim[rint, :]), max(Q_sim[rint, :]))
+        ax = plt.gca()
+        ax.set_xticklabels([])
+        ax.tick_params(axis='both', which='major', labelsize=18)
+        ax.tick_params(axis='both', which='minor', labelsize=18)
+
+    # Save the results
     plt.savefig('Pictures/probe_measurement.pdf', dpi=100)
-    plt.savefig('Pictures/probe_measurement.eps', dpi=100)
-    plt.savefig('Pictures/probe_measurement.svg', dpi=100)
 
 
 def make_table(sindy_model, feature_names):
@@ -280,7 +225,11 @@ def update_manifold_movie(frame, x_true, x_sim, t_test, i, j, k):
     """
     print(frame)
     r = np.shape(x_sim)[1]
+
+    # Erase plot from previous movie frame
     plt.clf()
+
+    # setup 3D plot, and three 2D projections on the "walls".
     fig = plt.figure(101, figsize=(16, 7))
     ax1 = fig.add_subplot(121, projection='3d')
     ax1.plot(x_true[0:frame, j], x_true[0:frame, k], zs=-0.4, zdir='x',
@@ -295,37 +244,30 @@ def update_manifold_movie(frame, x_true, x_sim, t_test, i, j, k):
                 s=80, color='k', marker='o')
     ax1.azim = 25+0.5*frame/9.0
     ax1.elev = 5+0.5*frame/13.0
-    # ax1.set_xlabel(r'$a_1$', fontsize=22)
-    # ax1.set_ylabel(r'$a_2$', fontsize=22)
     ax1.set_xticks([-0.3, 0, 0.3])
     ax1.set_yticks([-0.3, 0, 0.3])
     ax1.set_zticks([-0.3, 0, 0.3])
     ax1.set_xticklabels([])
     ax1.set_yticklabels([])
     ax1.set_zticklabels([])
-    # ax1.set_xticks([-0.6,-0.3, 0, 0.3, 0.6])
-    # ax1.set_yticks([-0.6,-0.3, 0, 0.3, 0.6])
-    # ax1.set_zticks([-0.6,-0.3, 0, 0.3, 0.6])
     ax1.set_xlim(-0.4, 0.4)
     ax1.set_ylim(-0.4, 0.4)
     ax1.set_zlim(-0.4, 0.4)
-    # ax1.zaxis.set_rotate_label(False)  # disable automatic rotation
-    # ax1.set_zlabel(r'$a_3$', fontsize=22) #,rotation=90)
-    # ax1.xaxis.labelpad=10
-    # ax1.yaxis.labelpad=12
-    # ax1.zaxis.labelpad=22
     ax1.grid(True)
     ax1.tick_params(axis='both', which='major', labelsize=18)
     ax1.tick_params(axis='both', which='minor', labelsize=18)
+
     # First remove fill
     ax1.xaxis.pane.fill = False
     ax1.yaxis.pane.fill = False
     ax1.zaxis.pane.fill = False
-    # Now set color to white (or whatever is "invisible")
+
+    # Now set color to light color
     ax1.xaxis.pane.set_edgecolor('whitesmoke')
     ax1.yaxis.pane.set_edgecolor('whitesmoke')
     ax1.zaxis.pane.set_edgecolor('whitesmoke')
-    # ax1.axis('off')
+
+    # Repeat process for the model-predicted temporal POD modes
     ax2 = fig.add_subplot(122, projection='3d')
     ax2.plot(x_sim[0:frame, j], x_sim[0:frame, k], zs=-0.4, zdir='x',
              color='lightsalmon', linewidth=3)
@@ -339,10 +281,6 @@ def update_manifold_movie(frame, x_true, x_sim, t_test, i, j, k):
                 s=80, color='r', marker='o')
     ax2.azim = 25+0.5*frame/9.0
     ax2.elev = 5+0.5*frame/13.0
-    # ax2.plot(x_sim_predict[:, 0], x_sim_predict[:,1], x_sim_predict[:, 2],
-    #          'r')
-    # ax2.set_xlabel(r'$a_1$', fontsize=22)
-    # ax2.set_ylabel(r'$a_2$', fontsize=22)
     ax2.set_xlim(-0.4, 0.4)
     ax2.set_ylim(-0.4, 0.4)
     ax2.set_zlim(-0.4, 0.4)
@@ -352,26 +290,21 @@ def update_manifold_movie(frame, x_true, x_sim, t_test, i, j, k):
     ax2.set_xticklabels([])
     ax2.set_yticklabels([])
     ax2.set_zticklabels([])
-    # ax2.set_xticks([-0.6,-0.3, 0, 0.3, 0.6])
-    # ax2.set_yticks([-0.6,-0.3, 0, 0.3, 0.6])
-    # ax2.set_zticks([-0.6,-0.3, 0, 0.3, 0.6])
-    # ax2.zaxis.set_rotate_label(False)  # disable automatic rotation
-    # ax2.set_zlabel(r'$a_3$', fontsize=22) #,rotation=90)
-    # ax2.xaxis.labelpad=10
-    # ax2.yaxis.labelpad=12
-    # ax2.zaxis.labelpad=22
     ax2.grid(True)
     ax2.tick_params(axis='both', which='major', labelsize=18)
     ax2.tick_params(axis='both', which='minor', labelsize=18)
+
     # First remove fill
     ax2.xaxis.pane.fill = False
     ax2.yaxis.pane.fill = False
     ax2.zaxis.pane.fill = False
-    # Now set color to white (or whatever is "invisible")
+
+    # Now set color to light color
     ax2.xaxis.pane.set_edgecolor('whitesmoke')
     ax2.yaxis.pane.set_edgecolor('whitesmoke')
     ax2.zaxis.pane.set_edgecolor('whitesmoke')
-    # ax2.axis('off')
+
+    # Save a picture at frame 200 of the movie
     if frame == 200:
         plt.savefig('Pictures/' + str(i) + str(j) + str(k) +
                     'manifold' + str(frame) + '.pdf')
@@ -433,26 +366,35 @@ def update_toroidal_movie(frame, X, Y, Z, B_true,
     """
     print(frame)
     R = np.sqrt(X**2 + Y**2)
+
+    # Find location where the probe Z location is approximately at Z=0
     Z0 = np.isclose(Z, np.ones(len(Z))*min(abs(Z)), rtol=1e-3, atol=1e-3)
+
+    # Get the indices where Z=0
     ind_Z0 = [i for i, p in enumerate(Z0) if p]
+
+    # Get the R and phi locations for the Z=0 probes
     ri = np.linspace(0, max(R[ind_Z0]), 40)
     phii = np.linspace(0, 2*np.pi, 100)
     ri, phii = np.meshgrid(ri, phii)
+
+    # Convert to (x,y) coordinates
     xi = ri*np.cos(phii)
     yi = ri*np.sin(phii)
+
+    # Interpolate the true/POD-recon/predicted probe data onto the (xi,yi) mesh
     Bi = griddata((X[ind_Z0], Y[ind_Z0]), B_true[ind_Z0, frame],
                   (xi, yi), method='cubic')
     Bi_pod = griddata((X[ind_Z0], Y[ind_Z0]), B_pod[ind_Z0, frame],
                       (xi, yi), method='cubic')
     Bi_sim = griddata((X[ind_Z0], Y[ind_Z0]), B_sim[ind_Z0, frame],
                       (xi, yi), method='cubic')
+
+    # Erase figure from last movie frame
     plt.clf()
-    fig = plt.figure(102, figsize=(7, 20))
-    if prefix[1] != 'v':
-        subprefix = r'$' + prefix[0] + r'_' + prefix[1] + r'(R,\phi,0,t)$'
-    else:
-        subprefix = r'$' + prefix[0] + r'_{' + prefix[1] + \
-                        r',' + prefix[2] + r'}(R,\phi,0,t)$'
+
+    # Plotting, with scaling depending on if this is B or V field.
+    fig = plt.figure(102, figsize=(5, 20))
     plt.subplot(3, 1, 1)
     if prefix[0:2] == 'Bv':
         plt.pcolor(xi, yi, Bi*1.0e4, cmap='jet', vmin=-5e1, vmax=5e1)
@@ -475,6 +417,8 @@ def update_toroidal_movie(frame, X, Y, Z, B_true,
     ax = plt.gca()
     ax.axis('off')
     fig.subplots_adjust(right=0.75)
+
+    # Save picture of the contours on the first frame
     if frame == 0:
         plt.savefig('Pictures/'+prefix+'_contours.pdf')
 
@@ -504,10 +448,6 @@ def plot_BOD_Espectrum(S):
     ax.tick_params(axis='both', which='major', labelsize=22)
     ax.tick_params(axis='both', which='minor', labelsize=22)
     plt.savefig('Pictures/BOD_spectrum.pdf')
-    plt.savefig('Pictures/BOD_spectrum.png')
-    plt.savefig('Pictures/BOD_spectrum.eps')
-    plt.savefig('Pictures/BOD_spectrum.svg')
-    np.savetxt('Pictures/plasmaphysics_example2_singularvalues.txt', S.real)
 
 
 def make_evo_plots(x_dot, x_dot_train, x_dot_sim,
@@ -562,6 +502,8 @@ def make_evo_plots(x_dot, x_dot_train, x_dot_sim,
     if r == 12 or r == 6:
         fig, axs = plt.subplots(3, int(r/3), figsize=(16, 9))
         axs = np.ravel(axs)
+
+    # Loop over the r temporal Xdot modes that were fit
     for i in range(r):
         axs[i].plot(t_test/1.0e3, x_dot[t_train.shape[0]:, i], color='k',
                     linewidth=2, label='numerical derivative')
@@ -576,6 +518,8 @@ def make_evo_plots(x_dot, x_dot_train, x_dot_sim,
         axs[i].grid(True)
     plt.savefig('Pictures/xdot.pdf')
     plt.savefig('Pictures/xdot.eps')
+
+    # Repeat for X
     fig, axs = plt.subplots(r, 1, sharex=True, figsize=(7, 9))
     if r == 12 or r == 6:
         fig, axs = plt.subplots(3, int(r/3), figsize=(16, 9))
@@ -629,6 +573,8 @@ def make_3d_plots(x_true, x_sim, t_test, prefix, i, j, k):
        Index of the third of the POD modes
 
     """
+
+    # Setup plots in anticipation for animation-making
     r = np.shape(x_true)[1]
     fig = plt.figure(101, figsize=(18, 10))
     ax1 = fig.add_subplot(121, projection='3d')
@@ -638,7 +584,7 @@ def make_3d_plots(x_true, x_sim, t_test, prefix, i, j, k):
     ax1.set_xticklabels([])
     ax1.set_yticklabels([])
     ax1.set_zticklabels([])
-    ax1.zaxis.set_rotate_label(False)  # disable automatic rotation
+    ax1.zaxis.set_rotate_label(False)
     ax1.set_zlabel(r'$a_3$', fontsize=22)
     ax1.xaxis.labelpad = 10
     ax1.yaxis.labelpad = 12
@@ -652,18 +598,22 @@ def make_3d_plots(x_true, x_sim, t_test, prefix, i, j, k):
     ax2.set_xticklabels([])
     ax2.set_yticklabels([])
     ax2.set_zticklabels([])
-    ax2.zaxis.set_rotate_label(False)  # disable automatic rotation
+    ax2.zaxis.set_rotate_label(False)
     ax2.set_zlabel(r'$a_3$', fontsize=22)
     ax2.xaxis.labelpad = 10
     ax2.yaxis.labelpad = 12
     ax2.zaxis.labelpad = 22
     ax2.grid(True)
     ax2.axis('off')
+
+    # Make animation object and loop over the time corresponding to test data
     ani = animation.FuncAnimation(fig, update_manifold_movie,
                                   range(2, len(t_test)),
                                   fargs=(x_true, x_sim,
                                          t_test, i, j, k), repeat=False,
                                   interval=100, blit=False)
+
+    # Set the frames-per-second and save the animation
     FPS = 25
     ani.save('Pictures/'+prefix+'manifold'+str(i)+str(j)+str(k)+'.mp4',
              fps=FPS, dpi=100)
@@ -688,131 +638,29 @@ def plot_pod_temporal_modes(x, time):
     r = np.shape(x)[1]
     time = time/1.0e3
     plt.figure(figsize=(8, 5))
+
+    # Use gridspec to make a nice gridded plot with no internal spacings
     gs1 = gridspec.GridSpec(2, 12)
-    gs1.update(wspace=0.0, hspace=0.0)  # set the spacing between axes.
-    plt.subplot(gs1[0])
-    plt.plot(time, x[:, 0]/np.max(abs(x[:, 0])), 'k')
-    ax = plt.gca()
-    # ax.set_xticks([1.5, 2.75, 4.0])
-    ax.set_xticks([1.0, 1.5, 2.0, 2.5, 3.0])
-    ax.set_yticks([-1, 0, 1])
-    plt.ylim(-1.1, 1.1)
-    ax.set_xticklabels([])
-    ax.set_yticklabels([])
-    plt.grid(True)
-    plt.subplot(gs1[1])
-    plt.plot(time, x[:, 1]/np.max(abs(x[:, 1])), 'k')
-    ax = plt.gca()
-    # ax.set_xticks([1.5, 2.75, 4.0])
-    ax.set_xticks([1.0, 1.5, 2.0, 2.5, 3.0])
-    ax.set_yticks([-1, 0, 1])
-    plt.ylim(-1.1, 1.1)
-    ax.set_xticklabels([])
-    ax.set_yticklabels([])
-    plt.grid(True)
-    plt.subplot(gs1[2])
-    plt.plot(time, x[:, 2]/np.max(abs(x[:, 2])), 'k')
-    ax = plt.gca()
-    # ax.set_xticks([1.5, 2.75, 4.0])
-    ax.set_xticks([1.0, 1.5, 2.0, 2.5, 3.0])
-    ax.set_yticks([-1, 0, 1])
-    plt.ylim(-1.1, 1.1)
-    ax.set_xticklabels([])
-    ax.set_yticklabels([])
-    plt.grid(True)
-    plt.subplot(gs1[3])
-    plt.plot(time, x[:, 3]/np.max(abs(x[:, 3])), 'k')
-    ax = plt.gca()
-    # ax.set_xticks([1.5, 2.75, 4.0])
-    ax.set_xticks([1.0, 1.5, 2.0, 2.5, 3.0])
-    ax.set_yticks([-1, 0, 1])
-    plt.ylim(-1.1, 1.1)
-    ax.set_xticklabels([])
-    ax.set_yticklabels([])
-    plt.grid(True)
-    plt.subplot(gs1[4])
-    plt.plot(time, x[:, 4]/np.max(abs(x[:, 4])), 'k')
-    ax = plt.gca()
-    # ax.set_xticks([1.5, 2.75, 4.0])
-    ax.set_xticks([1.0, 1.5, 2.0, 2.5, 3.0])
-    ax.set_yticks([-1, 0, 1])
-    plt.ylim(-1.1, 1.1)
-    ax.set_xticklabels([])
-    ax.set_yticklabels([])
-    plt.grid(True)
-    plt.subplot(gs1[5])
-    plt.plot(time, x[:, 5]/np.max(abs(x[:, 5])), 'k')
-    ax = plt.gca()
-    # ax.set_xticks([1.5, 2.75, 4.0])
-    ax.set_xticks([1.0, 1.5, 2.0, 2.5, 3.0])
-    ax.set_yticks([-1, 0, 1])
-    plt.ylim(-1.1, 1.1)
-    ax.set_xticklabels([])
-    ax.set_yticklabels([])
-    plt.grid(True)
-    plt.subplot(gs1[6])
-    plt.plot(time, x[:, 6]/np.max(abs(x[:, 6])), 'k')
-    ax = plt.gca()
-    # ax.set_xticks([1.5, 2.75, 4.0])
-    ax.set_xticks([1.0, 1.5, 2.0, 2.5, 3.0])
-    ax.set_yticks([-1, 0, 1])
-    plt.ylim(-1.1, 1.1)
-    ax.set_xticklabels([])
-    ax.set_yticklabels([])
-    plt.grid(True)
-    plt.subplot(gs1[7])
-    plt.plot(time, x[:, 7]/np.max(abs(x[:, 7])), 'k')
-    ax = plt.gca()
-    # ax.set_xticks([1.5, 2.75, 4.0])
-    ax.set_xticks([1.0, 1.5, 2.0, 2.5, 3.0])
-    ax.set_yticks([-1, 0, 1])
-    plt.ylim(-1.1, 1.1)
-    ax.set_xticklabels([])
-    ax.set_yticklabels([])
-    plt.grid(True)
-    plt.subplot(gs1[8])
-    plt.plot(time, x[:, 8]/np.max(abs(x[:, 8])), 'k')
-    ax = plt.gca()
-    # ax.set_xticks([1.5, 2.75, 4.0])
-    ax.set_xticks([1.0, 1.5, 2.0, 2.5, 3.0])
-    ax.set_yticks([-1, 0, 1])
-    plt.ylim(-1.1, 1.1)
-    ax.set_xticklabels([])
-    ax.set_yticklabels([])
-    plt.grid(True)
-    plt.subplot(gs1[9])
-    plt.plot(time, x[:, 9]/np.max(abs(x[:, 9])), 'k')
-    ax = plt.gca()
-    # ax.set_xticks([1.5, 2.75, 4.0])
-    ax.set_xticks([1.0, 1.5, 2.0, 2.5, 3.0])
-    ax.set_yticks([-1, 0, 1])
-    plt.ylim(-1.1, 1.1)
-    ax.set_xticklabels([])
-    ax.set_yticklabels([])
-    plt.grid(True)
-    plt.subplot(gs1[10])
-    plt.plot(time, x[:, 10]/np.max(abs(x[:, 10])), 'k')
-    ax = plt.gca()
-    # ax.set_xticks([1.5, 2.75, 4.0])
-    ax.set_xticks([1.0, 1.5, 2.0, 2.5, 3.0])
-    ax.set_yticks([-1, 0, 1])
-    plt.ylim(-1.1, 1.1)
-    ax.set_xticklabels([])
-    ax.set_yticklabels([])
-    plt.grid(True)
-    plt.subplot(gs1[11])
-    plt.plot(time, x[:, 11]/np.max(abs(x[:, 11])), 'k')
-    ax = plt.gca()
-    # ax.set_xticks([1.5, 2.75, 4.0])
-    ax.set_xticks([1.0, 1.5, 2.0, 2.5, 3.0])
-    ax.set_yticks([-1, 0, 1])
-    plt.ylim(-1.1, 1.1)
-    ax.set_xticklabels([])
-    ax.set_yticklabels([])
-    plt.grid(True)
+    gs1.update(wspace=0.0, hspace=0.0)
+
+    # Loop over the first 12 normalized temporal modes
+    for i in range(12):
+        plt.subplot(gs1[i])
+        plt.plot(time, x[:, i]/np.max(abs(x[:, i])), 'k')
+        ax = plt.gca()
+        # ax.set_xticks([1.5, 2.75, 4.0])
+        ax.set_xticks([1.0, 1.5, 2.0, 2.5, 3.0])
+        ax.set_yticks([-1, 0, 1])
+        plt.ylim(-1.1, 1.1)
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+        plt.grid(True)
+
+    # Save the figure
     plt.savefig('Pictures/temporal_modes.pdf')
     plt.savefig('Pictures/temporal_modes.eps')
-    print('Checking that the temporal POD modes integrate to zero:')
+
+    # Checking that the temporal POD modes approximately integrate to zero
     print('Simpson results: ')
     print(simps(x[:, 0], time)/(time[-1] - time[0]))
     print(simps(x[:, 1], time)/(time[-1] - time[0]))
@@ -822,141 +670,40 @@ def plot_pod_temporal_modes(x, time):
     print(simps(x[:, 5], time)/(time[-1] - time[0]))
     print(simps(x[:, 6], time)/(time[-1] - time[0]))
 
-    # Now plot the fourier transforms
+    # Now plot the fourier transforms OF THE MODES
     time_uniform = np.linspace(time[0], time[-1], len(time)*2)
     x_uniform = np.zeros((len(time)*2, x.shape[1]))
+
+    # Interpolate onto a uniform time base for the DFT
     for i in range(x.shape[1]):
         x_uniform[:, i] = np.interp(time_uniform, time, x[:, i])
     fftx = np.fft.fft(x_uniform, axis=0)/len(time)
     freq = np.fft.fftfreq(len(time_uniform), time_uniform[1]-time_uniform[0])
     fftx = fftx[:len(time)-1, :]
     freq = freq[:len(time)-1]
-    plt.subplot(gs1[12])
-    plt.plot(freq, abs(fftx[:, 0]), 'k', linewidth=3)
-    ax = plt.gca()
-    ax.set_xticks([0, 14.5, 14.5*2, 14.5*3, 14.5*4, 14.5*5])
-    ax.set_xticklabels([])
-    ax.set_yticks([])
-    ax.set_yticklabels([])
-    plt.xlim(0, 80)
-    plt.grid(True)
-    plt.subplot(gs1[13])
-    plt.plot(freq, abs(fftx[:, 1]), 'k', linewidth=3)
-    ax = plt.gca()
-    ax.set_xticks([0, 14.5, 14.5*2, 14.5*3, 14.5*4, 14.5*5])
-    ax.set_xticklabels([])
-    ax.set_yticks([])
-    ax.set_yticklabels([])
-    plt.xlim(0, 80)
-    plt.grid(True)
-    plt.subplot(gs1[14])
-    plt.plot(freq, abs(fftx[:, 2]), 'k', linewidth=3)
-    ax = plt.gca()
-    ax.set_xticks([0, 14.5, 14.5*2, 14.5*3, 14.5*4, 14.5*5])
-    ax.set_xticklabels([])
-    ax.set_yticks([])
-    ax.set_yticklabels([])
-    plt.xlim(0, 80)
-    plt.grid(True)
-    plt.subplot(gs1[15])
-    plt.plot(freq, abs(fftx[:, 3]), 'k', linewidth=3)
-    ax = plt.gca()
-    ax.set_xticks([0, 14.5, 14.5*2, 14.5*3, 14.5*4, 14.5*5])
-    ax.set_xticklabels([])
-    ax.set_yticks([])
-    ax.set_yticklabels([])
-    plt.xlim(0, 80)
-    plt.grid(True)
-    plt.subplot(gs1[16])
-    plt.plot(freq, abs(fftx[:, 4]), 'k', linewidth=3)
-    ax = plt.gca()
-    ax.set_xticks([0, 14.5, 14.5*2, 14.5*3, 14.5*4, 14.5*5])
-    ax.set_xticklabels([])
-    ax.set_yticks([])
-    ax.set_yticklabels([])
-    plt.xlim(0, 80)
-    plt.grid(True)
-    plt.subplot(gs1[17])
-    plt.plot(freq, abs(fftx[:, 5]), 'k', linewidth=3)
-    ax = plt.gca()
-    ax.set_xticks([0, 14.5, 14.5*2, 14.5*3, 14.5*4, 14.5*5])
-    ax.set_xticklabels([])
-    ax.set_yticks([])
-    ax.set_yticklabels([])
-    plt.xlim(0, 80)
-    plt.grid(True)
-    plt.subplot(gs1[18])
-    plt.plot(freq, abs(fftx[:, 6]), 'k', linewidth=3)
-    ax = plt.gca()
-    ax.set_yticks([])
-    ax.set_yticklabels([])
-    ax.set_xticks([0, 14.5, 14.5*2, 14.5*3, 14.5*4, 14.5*5])
-    ax.set_xticklabels([])
-    ax.tick_params(axis='both', which='major', labelsize=18)
-    ax.tick_params(axis='both', which='minor', labelsize=18)
-    plt.xlim(0, 80)
-    plt.grid(True)
-    plt.subplot(gs1[19])
-    plt.plot(freq, abs(fftx[:, 7]), 'k', linewidth=3)
-    ax = plt.gca()
-    ax.set_yticks([])
-    ax.set_yticklabels([])
-    ax.set_xticks([0, 14.5, 14.5*2, 14.5*3, 14.5*4, 14.5*5])
-    ax.set_xticklabels([])
-    ax.tick_params(axis='both', which='major', labelsize=18)
-    ax.tick_params(axis='both', which='minor', labelsize=18)
-    plt.xlim(0, 80)
-    plt.grid(True)
-    plt.subplot(gs1[20])
-    plt.plot(freq, abs(fftx[:, 8]), 'k', linewidth=3)
-    ax = plt.gca()
-    ax.set_yticks([])
-    ax.set_yticklabels([])
-    ax.set_xticks([0, 14.5, 14.5*2, 14.5*3, 14.5*4, 14.5*5])
-    ax.set_xticklabels([])
-    ax.tick_params(axis='both', which='major', labelsize=18)
-    ax.tick_params(axis='both', which='minor', labelsize=18)
-    plt.xlim(0, 80)
-    plt.grid(True)
-    plt.subplot(gs1[21])
-    plt.plot(freq, abs(fftx[:, 9]), 'k', linewidth=3)
-    ax = plt.gca()
-    ax.set_yticks([])
-    ax.set_yticklabels([])
-    ax.set_xticks([0, 14.5, 14.5*2, 14.5*3, 14.5*4, 14.5*5])
-    ax.set_xticklabels([])
-    ax.tick_params(axis='both', which='major', labelsize=18)
-    ax.tick_params(axis='both', which='minor', labelsize=18)
-    plt.xlim(0, 80)
-    plt.grid(True)
-    plt.subplot(gs1[22])
-    plt.plot(freq, abs(fftx[:, 10]), 'k', linewidth=3)
-    ax = plt.gca()
-    ax.set_yticks([])
-    ax.set_yticklabels([])
-    ax.set_xticks([0, 14.5, 14.5*2, 14.5*3, 14.5*4, 14.5*5])
-    ax.set_xticklabels([])
-    ax.tick_params(axis='both', which='major', labelsize=18)
-    ax.tick_params(axis='both', which='minor', labelsize=18)
-    plt.xlim(0, 80)
-    plt.grid(True)
-    plt.subplot(gs1[23])
-    plt.plot(freq, abs(fftx[:, 11]), 'k', linewidth=3)
-    ax = plt.gca()
-    ax.set_yticks([])
-    ax.set_yticklabels([])
-    ax.set_xticks([0, 14.5, 14.5*2, 14.5*3, 14.5*4, 14.5*5])
-    ax.set_xticklabels([])
-    ax.tick_params(axis='both', which='major', labelsize=18)
-    ax.tick_params(axis='both', which='minor', labelsize=18)
-    plt.xlim(0, 80)
-    plt.grid(True)
+
+    # Loop over the first 12 temporal mode FFTs
+    for i in range(12):
+        plt.subplot(gs1[12+i])
+        plt.plot(freq, abs(fftx[:, i]), 'k', linewidth=3)
+        ax = plt.gca()
+        ax.set_xticks([0, 14.5, 14.5*2, 14.5*3, 14.5*4, 14.5*5])
+        ax.set_xticklabels([])
+        ax.set_yticks([])
+        ax.set_yticklabels([])
+        plt.xlim(0, 80)
+        plt.grid(True)
+
+    # Save the finished figure
     plt.savefig('Pictures/frequency_modes.pdf')
     plt.savefig('Pictures/frequency_modes.eps')
+
+    # Plot the modes in each of their 2D state spaces
     plot_pairwise(x)
+
     # now save trajectories to a file
-    np.savetxt('trajectories_modes.txt', x)
-    np.savetxt('trajectories_time.txt', time)
+    np.savetxt('Pictures/trajectories_modes.txt', x)
+    np.savetxt('Pictures/trajectories_time.txt', time)
 
 
 def plot_pod_spatial_modes(X, Y, Z, U):
@@ -984,22 +731,34 @@ def plot_pod_spatial_modes(X, Y, Z, U):
 
     """
     R = np.sqrt(X**2 + Y**2)
+    # Find location where the probe Z location is approximately at Z=0
     Z0 = np.isclose(Z, np.ones(len(Z))*min(abs(Z)), rtol=1e-3, atol=1e-3)
+
+    # Get the indices where Z=0
     ind_Z0 = [i for i, p in enumerate(Z0) if p]
-    print('Number of points on midplane: ', ind_Z0, len(ind_Z0))
+
+    # Get the R and phi locations for the Z=0 probes
     ri = np.linspace(0, max(R[ind_Z0]), 40)
     phii = np.linspace(0, 2*np.pi, 100)
     ri, phii = np.meshgrid(ri, phii)
+
+    # Convert to (x,y) coordinates
     xi = ri*np.cos(phii)
     yi = ri*np.sin(phii)
     n_sample = len(R)
     U = U.real
     fig = plt.figure(figsize=(12, 12))
+
+    # prepare Gridspec object with no internal spacings
     gs1 = gridspec.GridSpec(12, 12)
     gs1.update(wspace=0.0, hspace=0.0)
+
+    # Loop over Bx, By, Bz, Bvx, Bvy, Bvz
     for i in range(6):
+        # Loop over the first 12 POD modes
         for j in range(12):
             U_sub = U[i*n_sample:(i+1)*n_sample, :]
+            # Interpolate spatial data onto the (xi, yi) grid
             U_grid = griddata((X[ind_Z0], Y[ind_Z0]), U_sub[ind_Z0, j],
                               (xi, yi), method='cubic')
             plt.subplot(gs1[i+j*12])
@@ -1008,9 +767,10 @@ def plot_pod_spatial_modes(X, Y, Z, U):
             ax = plt.gca()
             ax.set_xticks([])
             ax.set_yticks([])
+
+    # Save figure
     plt.savefig('Pictures/spatial_modes.pdf', dpi=50)
-    plt.savefig('Pictures/spatial_modes.eps', dpi=50)
-    np.savetxt("Pictures/compressible1_spatialmodes.csv", U, delimiter=",")
+    # np.savetxt("Pictures/compressible1_spatialmodes.csv", U, delimiter=",")
 
 
 def plot_pairwise(x):
@@ -1028,10 +788,14 @@ def plot_pairwise(x):
     """
     r = np.shape(x)[1]
     plt.figure(figsize=(r, r))
+
+    # Create GridSpec object with no internal spacings
     gs1 = gridspec.GridSpec(r, r)
     gs1.update(wspace=0.0, hspace=0.0)
+
+    # Loop over all r temporal POD modes being modeled
     for i in range(r):
-        q = i
+        # Loop over remaining POD modes
         for j in range(0, r-i):
             plt.subplot(gs1[i, j])
             ax = plt.gca()
@@ -1040,9 +804,9 @@ def plot_pairwise(x):
             ax.set_yticks([])
             ax.set_xticklabels([])
             ax.set_yticklabels([])
-            q = q + 1
+
+    # Save figure
     plt.savefig('Pictures/pairwise_plots.pdf', dpi=100)
-    plt.savefig('Pictures/pairwise_plots.eps', dpi=100)
 
 
 def plot_density(time, dens):
@@ -1062,75 +826,25 @@ def plot_density(time, dens):
         Simulation density at every spatio-temporal location
 
     """
+
+    # Rescale to ms and m^-3
     time = time/1.0e3
     dens = dens/1.0e19
+
+    # Pick some random locations to see density fluctuation sizes
     plt.figure(figsize=(10, 14))
-    plt.subplot(6, 2, 1)
-    plt.plot(time, dens[123, :], 'k')
-    plt.ylim(0.5, 3.5)
-    ax = plt.gca()
-    ax.set_xticklabels([])
-    plt.subplot(6, 2, 2)
-    plt.plot(time, dens[8912, :], 'k')
-    plt.ylim(0.5, 3.5)
-    ax = plt.gca()
-    ax.set_yticklabels([])
-    ax.set_xticklabels([])
-    plt.subplot(6, 2, 3)
-    plt.plot(time, dens[1, :], 'k')
-    plt.ylim(0.5, 3.5)
-    ax = plt.gca()
-    ax.set_xticklabels([])
-    plt.subplot(6, 2, 4)
-    plt.plot(time, dens[23049, :], 'k')
-    plt.ylim(0.5, 3.5)
-    ax = plt.gca()
-    ax.set_yticklabels([])
-    ax.set_xticklabels([])
-    plt.subplot(6, 2, 5)
-    plt.plot(time, dens[35819, :], 'k')
-    plt.ylim(0.5, 3.5)
-    ax = plt.gca()
-    ax.set_xticklabels([])
-    plt.subplot(6, 2, 6)
-    plt.plot(time, dens[40000, :], 'k')
-    plt.ylim(0.5, 3.5)
-    ax = plt.gca()
-    ax.set_yticklabels([])
-    ax.set_xticklabels([])
-    plt.subplot(6, 2, 7)
-    plt.plot(time, dens[15555, :], 'k')
-    plt.ylim(0.5, 3.5)
-    ax = plt.gca()
-    ax.set_xticklabels([])
-    plt.subplot(6, 2, 8)
-    plt.plot(time, dens[29993, :], 'k')
-    plt.ylim(0.5, 3.5)
-    ax = plt.gca()
-    ax.set_yticklabels([])
-    ax.set_xticklabels([])
-    plt.subplot(6, 2, 9)
-    plt.plot(time, dens[31289, :], 'k')
-    plt.ylim(0.5, 3.5)
-    ax = plt.gca()
-    ax.set_xticklabels([])
-    plt.subplot(6, 2, 10)
-    ax = plt.gca()
-    ax.set_yticklabels([])
-    plt.plot(time, dens[12122, :], 'k')
-    plt.ylim(0.5, 3.5)
-    ax.set_xticklabels([])
-    plt.subplot(6, 2, 11)
-    plt.plot(time, dens[3291, :], 'k')
-    plt.ylim(0.5, 3.5)
-    ax = plt.gca()
-    plt.subplot(6, 2, 12)
-    plt.plot(time, dens[43920, :], 'k')
-    plt.ylim(0.5, 3.5)
-    ax = plt.gca()
-    ax.set_yticklabels([])
+    for i in range(12):
+        plt.subplot(6, 2, i+1)
+        plt.plot(time, dens[randint(0, dens.shape[0]-1), :], 'k')
+        plt.ylim(0.5, 3.5)
+        ax = plt.gca()
+        if i != 0 and i != 5:
+            ax.set_yticklabels([])
+        if i <= 9:
+            ax.set_xticklabels([])
+
+    # Save figure
     plt.savefig('Pictures/density_samples.pdf')
-    plt.savefig('Pictures/density_samples.eps')
 
 
 def make_toroidal_movie(X, Y, Z, B_true, B_pod,
@@ -1182,28 +896,33 @@ def make_toroidal_movie(X, Y, Z, B_true, B_pod,
         Bx, By, Bz, Vx, Vy, Vz are all appropriate choices.
 
     """
-    # R = X**2 + Y**2
     R = np.sqrt(X**2 + Y**2)
+
+    # Find location where the probe Z location is approximately at Z=0
     Z0 = np.isclose(Z, np.ones(len(Z))*min(abs(Z)), rtol=1e-3, atol=1e-3)
+
+    # Get the indices where Z=0
     ind_Z0 = [i for i, p in enumerate(Z0) if p]
+
+    # Get the R and phi locations for the Z=0 probes
     ri = np.linspace(0, max(R[ind_Z0]), 40)
     phii = np.linspace(0, 2*np.pi, 100)
     ri, phii = np.meshgrid(ri, phii)
+
+    # Convert to (x,y) coordinates
     xi = ri*np.cos(phii)
     yi = ri*np.sin(phii)
+
+    # Interpolate measurements to the (xi,yi) mesh
     Bi = griddata((X[ind_Z0], Y[ind_Z0]), B_true[ind_Z0, 0],
                   (xi, yi), method='cubic')
     Bi_pod = griddata((X[ind_Z0], Y[ind_Z0]), B_pod[ind_Z0, 0],
                       (xi, yi), method='cubic')
     Bi_sim = griddata((X[ind_Z0], Y[ind_Z0]), B_sim[ind_Z0, 0],
                       (xi, yi), method='cubic')
-    plt.clf()
-    fig = plt.figure(102, figsize=(7, 20))
-    if prefix[1] != 'A':
-        subprefix = r'$' + prefix[0] + r'_' + prefix[1] + r'(R,\phi,0,t)$'
-    else:
-        subprefix = r'$' + prefix[0] + r'_{' + prefix[1] + r',' + \
-                        prefix[2] + r'}(R,\phi,0,t)$'
+
+    # Setup figure for animation
+    fig = plt.figure(102, figsize=(5, 20))
     plt.subplot(3, 1, 1)
     plt.contourf(xi, yi, Bi*1.0e4, cmap='jet')
     ax = plt.gca()
@@ -1217,14 +936,18 @@ def make_toroidal_movie(X, Y, Z, B_true, B_pod,
     plt.contourf(xi, yi, Bi_sim*1.0e4, cmap='jet')
     ax = plt.gca()
     ax.axis('off')
+
+    # Setup animation object, looping over times corresponding to test data
     ani = animation.FuncAnimation(fig, update_toroidal_movie,
                                   range(0, len(t_test), 1),
                                   fargs=(X, Y, Z, B_true,
                                          B_pod, B_sim, t_test, prefix),
                                   repeat=False, interval=100,
                                   blit=False)
+
+    # Set frames-per-second and save the animation
     FPS = 30
-    ani.save('Pictures/'+prefix+'_contour.mp4', fps=FPS, dpi=200)
+    ani.save('Pictures/'+prefix+'_toroidal_contour.mp4', fps=FPS, dpi=200)
 
 
 def make_poloidal_movie(X, Y, Z, B_true, B_pod, B_sim, t_test, prefix):
@@ -1276,26 +999,30 @@ def make_poloidal_movie(X, Y, Z, B_true, B_pod, B_sim, t_test, prefix):
 
     """
     R = X**2 + Y**2
+
+    # Find where X > 0 and Y = 0 (so a poloidal cross-section)
     X0 = np.ravel(np.where(np.array(X) > 0.0))
     Y0 = np.isclose(Y, np.ones(len(Y))*min(abs(Y)), rtol=1e-3, atol=1e-3)
+
+    # Get indices with both X > 0 and Y = 0
     ind_Y0 = [i for i, p in enumerate(Y0) if p]
     ind_Y0 = np.intersect1d(X0, ind_Y0)
+
+    # Make (X,Z) mesh
     xi = np.linspace(min(X[ind_Y0]), max(X[ind_Y0]))
     zi = np.linspace(min(Z[ind_Y0]), max(Z[ind_Y0]))
     xi, zi = np.meshgrid(xi, zi)
+
+    # Interpolate measurements onto the (xi,zi) mesh
     Bi = griddata((X[ind_Y0], Z[ind_Y0]), B_true[ind_Y0, 0],
                   (xi, zi), method='cubic')
     Bi_pod = griddata((X[ind_Y0], Z[ind_Y0]), B_pod[ind_Y0, 0],
                       (xi, zi), method='cubic')
     Bi_sim = griddata((X[ind_Y0], Z[ind_Y0]), B_sim[ind_Y0, 0],
                       (xi, zi), method='cubic')
-    plt.clf()
-    fig = plt.figure(103, figsize=(7, 20))
-    if prefix[1] != 'A':
-        subprefix = r'$' + prefix[0] + r'_' + prefix[1] + r'(R,\phi,0,t)$'
-    else:
-        subprefix = r'$' + prefix[0] + r'_{' + prefix[1] + r',' + \
-                        prefix[2] + r'}(R,\phi,0,t)$'
+
+    # Setup figure for animation
+    fig = plt.figure(103, figsize=(5, 20))
     plt.subplot(3, 1, 1)
     plt.contourf(xi, zi, Bi*1.0e4, cmap='jet')
     ax = plt.gca()
@@ -1309,12 +1036,16 @@ def make_poloidal_movie(X, Y, Z, B_true, B_pod, B_sim, t_test, prefix):
     plt.contourf(xi, zi, Bi_sim*1.0e4, cmap='jet')
     ax = plt.gca()
     ax.axis('off')
+
+    # Setup animation object, looping over times corresponding to testing data
     ani = animation.FuncAnimation(fig, update_poloidal_movie,
                                   range(0, len(t_test), 1),
                                   fargs=(X, Y, Z, B_true, B_pod,
                                          B_sim, t_test, prefix),
                                   repeat=False, interval=100,
                                   blit=False)
+
+    # Set frames-per-second and save animation
     FPS = 30
     ani.save('Pictures/'+prefix+'_poloidal_contour.mp4', fps=FPS, dpi=200)
 
@@ -1375,26 +1106,32 @@ def update_poloidal_movie(frame, X, Y, Z, B_true,
     """
     print(frame)
     R = np.sqrt(X**2 + Y**2)
+    # Find where X > 0 and Y = 0 (so a poloidal cross-section)
     X0 = np.ravel(np.where(np.array(X) > 0.0))
     Y0 = np.isclose(Y, np.ones(len(Y))*min(abs(Y)), rtol=1e-3, atol=1e-3)
+
+    # Get indices with both X > 0 and Y = 0
     ind_Y0 = [i for i, p in enumerate(Y0) if p]
     ind_Y0 = np.intersect1d(X0, ind_Y0)
-    xi = np.linspace(min(X[ind_Y0]), max(X[ind_Y0]), 100)
-    zi = np.linspace(min(Z[ind_Y0]), max(Z[ind_Y0]), 100)
+
+    # Make (X,Z) mesh
+    xi = np.linspace(min(X[ind_Y0]), max(X[ind_Y0]))
+    zi = np.linspace(min(Z[ind_Y0]), max(Z[ind_Y0]))
     xi, zi = np.meshgrid(xi, zi)
+
+    # Interpolate measurements onto the (xi,zi) mesh
     Bi = griddata((X[ind_Y0], Z[ind_Y0]), B_true[ind_Y0, frame],
                   (xi, zi), method='cubic')
     Bi_pod = griddata((X[ind_Y0], Z[ind_Y0]), B_pod[ind_Y0, frame],
                       (xi, zi), method='cubic')
     Bi_sim = griddata((X[ind_Y0], Z[ind_Y0]), B_sim[ind_Y0, frame],
                       (xi, zi), method='cubic')
+
+    # Clear figure from previous frame
     plt.clf()
-    fig = plt.figure(103, figsize=(7, 20))
-    if prefix[1] != 'v':
-        subprefix = r'$' + prefix[0] + r'_' + prefix[1] + r'(R,\phi,0,t)$'
-    else:
-        subprefix = r'$' + prefix[0] + r'_{' + prefix[1] + r',' + \
-                        prefix[2] + r'}(R,\phi,0,t)$'
+
+    # Plot data, scaling depending on whether B or V is plotted
+    fig = plt.figure(103, figsize=(5, 20))
     plt.subplot(3, 1, 1)
     if prefix[0:2] == 'Bv':
         plt.pcolor(xi, zi, Bi*1.0e4, cmap='jet', vmin=-5e1, vmax=5e1)
@@ -1417,5 +1154,7 @@ def update_poloidal_movie(frame, X, Y, Z, B_true,
     ax = plt.gca()
     ax.axis('off')
     fig.subplots_adjust(right=0.75)
+
+    # Save picture at first frame
     if frame == 0:
         plt.savefig('Pictures/'+prefix+'_poloidal_contours.pdf')
