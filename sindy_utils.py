@@ -42,148 +42,6 @@ def inner_product(Q, R):
     return inner_prod
 
 
-def plot_measurement(Qorig, Q_pod, Q_sim, t_test, r):
-    """
-    Plot (Bx, By, Bz, Bvx, Bvy, Bvz) for a random probe measurement,
-    compare performanced between the ground truth and model,
-    with option to also include the POD of the ground truth.
-
-    Parameters
-    ----------
-
-    Qorig: 2D numpy array of floats
-    (D = total number of probes x 6, M_test = number of test data samples)
-        Ground truth probe data
-
-    Q_pod: 2D numpy array of floats
-    (D = total number of probes x 6, M_test = number of test data samples)
-        Reconstruction of the ground truth testing data using the POD
-
-    Q_sim: 2D numpy array of floats
-    (D = total number of probes x 6, M_test = number of test data samples)
-        Reconstruction of the ground truth testing
-        data using the identified model
-
-    t_test: 1D numpy array of floats
-    (M_test = number of test data samples)
-        Time samples for the test dataset
-
-    r: int
-    (1)
-        Truncation number of the SVD
-
-    """
-
-    # Pick a random probe and plot the performance
-    # of the model prediction for each of Bx, By, Bz, Bvx, Bvy, Bvz
-    Qsize = int(np.shape(Qorig)[0]/6)
-    plt.figure(figsize=(7, 9))
-    rint = randint(0, Qsize-1)
-    t_test = t_test/1.0e3
-
-    # Loop through the field components
-    for i in range(6):
-        plt.subplot(6, 1, i + 1)
-        plt.plot(t_test, Qorig[rint + i*Qsize, :],
-                 'k', linewidth=2, label='True')
-        # plt.plot(t_test/1.0e3, Q_pod[rint, :],
-        #           'k--', linewidth=2, label='True, r='+str(r))
-        plt.plot(t_test, Q_sim[rint, :],
-                 color='r', linewidth=2, label='Model, r='+str(r))
-        plt.grid(True)
-        plt.ylim(min(Q_sim[rint, :]), max(Q_sim[rint, :]))
-        ax = plt.gca()
-        ax.set_xticklabels([])
-        ax.tick_params(axis='both', which='major', labelsize=18)
-        ax.tick_params(axis='both', which='minor', labelsize=18)
-
-    # Save the results
-    plt.savefig('Pictures/probe_measurement.pdf', dpi=100)
-
-
-def make_table(sindy_model, feature_names):
-    """
-    Make color-coded table of coefficients. This is
-    made for use only for r = 3 because otherwise
-    the table is unreasonably large.
-
-    Parameters
-    ----------
-    sindy_model: A PySINDy model
-    (1)
-        A SINDy model that has already been fit with coefficients.
-
-    feature_names: numpy array of strings
-    (r = truncation number of the SVD or number of POD modes to model)
-        The names of the variables for which a time derivative is calculated
-
-    """
-    r = len(feature_names)
-    output_names = sindy_model.get_feature_names()
-    coefficients = np.transpose(sindy_model.coefficients())
-    colors = np.zeros(np.shape(coefficients), dtype=str)
-    for i in range(np.shape(coefficients)[0]):
-        for j in range(np.shape(coefficients)[1]):
-            coefficients[i, j] = '{0:.3f}'.format(coefficients[i, j])
-            if np.shape(coefficients)[1] == 3:
-                if abs(coefficients[i, j]) > 1e-3:
-                    if j == 0:
-                        colors[i, j] = 'b'
-                    elif j == 1:
-                        colors[i, j] = 'r'
-                    elif j == 2:
-                        colors[i, j] = 'g'
-                else:
-                    colors[i, j] = 'w'
-                    coefficients[i, j] = 0
-            else:
-                colors[i, j] = 'w'
-
-    # Fix the ^2 output names
-    for i in range(len(output_names)):
-        if '^2' in output_names[i]:
-            print(output_names[i])
-            temp = output_names[i][-3:]
-            temp = temp[1:3]+temp[0]
-            output_names[i] = output_names[i][:-3]+temp
-            print(output_names[i])
-
-    # Fix the feature names to add a dot on top
-    for i in range(len(feature_names)):
-        feature_names[i] = '$\dot{'+feature_names[i][1:-1]+'}$'
-    df = pd.DataFrame(coefficients, columns=feature_names)
-    fig, ax = plt.subplots(figsize=(6, 10))
-
-    # hide axes
-    fig.patch.set_visible(False)
-    ax.axis('off')
-    ax.axis('tight')
-    if r > 6:
-        ytable = ax.table(
-                 cellText=df.values[0:r, :], rowLabels=output_names[0:r],
-                 cellColours=colors[0:r], colLabels=df.columns,
-                 loc='center', colWidths=np.ones(12)*0.5/(12))
-    else:
-        ytable = ax.table(
-                 cellText=df.values, rowLabels=output_names,
-                 cellColours=colors, colLabels=df.columns,
-                 loc='center', colWidths=np.ones(12)*0.5/(12))
-    ytable.set_fontsize(18)
-    ytable.scale(1, 2)
-    plt.savefig('Pictures/SINDy_table.pdf')
-    if r > 6:
-        fig, ax = plt.subplots(figsize=(6, 30))
-        fig.patch.set_visible(False)
-        ax.axis('off')
-        ax.axis('tight')
-        ytable = ax.table(
-                 cellText=df.values[r:, :], rowLabels=output_names[r:],
-                 cellColours=colors[r:], colLabels=df.columns,
-                 loc='center', colWidths=np.ones(12)*0.5/(12))
-        ytable.set_fontsize(10)
-        plt.savefig('Pictures/SINDy_table_quadratic.pdf')
-
-
 def update_manifold_movie(frame, x_true, x_sim, t_test, i, j, k):
     """
     A function for the matplotlib.animation.FuncAnimation object
@@ -240,10 +98,10 @@ def update_manifold_movie(frame, x_true, x_sim, t_test, i, j, k):
              color='gray', linewidth=3)
     ax1.plot(x_true[0:frame, i], x_true[0:frame, j], x_true[0:frame, k],
              'k', linewidth=5)
-    ax1.scatter(x_true[frame-1, i], x_true[frame-1, j], x_true[frame-1, k],
+    ax1.scatter(x_true[frame - 1, i], x_true[frame - 1, j], x_true[frame - 1, k],
                 s=80, color='k', marker='o')
-    ax1.azim = 25+0.5*frame/9.0
-    ax1.elev = 5+0.5*frame/13.0
+    ax1.azim = 25 + 0.5 * frame / 9.0
+    ax1.elev = 5 + 0.5 * frame / 13.0
     ax1.set_xticks([-0.3, 0, 0.3])
     ax1.set_yticks([-0.3, 0, 0.3])
     ax1.set_zticks([-0.3, 0, 0.3])
@@ -277,10 +135,10 @@ def update_manifold_movie(frame, x_true, x_sim, t_test, i, j, k):
              color='lightsalmon', linewidth=3)
     ax2.plot(x_sim[0:frame, i], x_sim[0:frame, j], x_sim[0:frame, k],
              color='r', linewidth=5)
-    ax2.scatter(x_sim[frame-1, i], x_sim[frame-1, j], x_sim[frame-1, k],
+    ax2.scatter(x_sim[frame - 1, i], x_sim[frame - 1, j], x_sim[frame - 1, k],
                 s=80, color='r', marker='o')
-    ax2.azim = 25+0.5*frame/9.0
-    ax2.elev = 5+0.5*frame/13.0
+    ax2.azim = 25 + 0.5 * frame / 9.0
+    ax2.elev = 5 + 0.5 * frame / 13.0
     ax2.set_xlim(-0.4, 0.4)
     ax2.set_ylim(-0.4, 0.4)
     ax2.set_zlim(-0.4, 0.4)
@@ -303,11 +161,6 @@ def update_manifold_movie(frame, x_true, x_sim, t_test, i, j, k):
     ax2.xaxis.pane.set_edgecolor('whitesmoke')
     ax2.yaxis.pane.set_edgecolor('whitesmoke')
     ax2.zaxis.pane.set_edgecolor('whitesmoke')
-
-    # Save a picture at frame 200 of the movie
-    if frame == 200:
-        plt.savefig('Pictures/' + str(i) + str(j) + str(k) +
-                    'manifold' + str(frame) + '.pdf')
 
 
 def update_toroidal_movie(frame, X, Y, Z, B_true,
@@ -365,22 +218,22 @@ def update_toroidal_movie(frame, X, Y, Z, B_true,
 
     """
     print(frame)
-    R = np.sqrt(X**2 + Y**2)
+    R = np.sqrt(X ** 2 + Y ** 2)
 
     # Find location where the probe Z location is approximately at Z=0
-    Z0 = np.isclose(Z, np.ones(len(Z))*min(abs(Z)), rtol=1e-3, atol=1e-3)
+    Z0 = np.isclose(Z, np.ones(len(Z)) * min(abs(Z)), rtol=1e-3, atol=1e-3)
 
     # Get the indices where Z=0
     ind_Z0 = [i for i, p in enumerate(Z0) if p]
 
     # Get the R and phi locations for the Z=0 probes
     ri = np.linspace(0, max(R[ind_Z0]), 40)
-    phii = np.linspace(0, 2*np.pi, 100)
+    phii = np.linspace(0, 2 * np.pi, 100)
     ri, phii = np.meshgrid(ri, phii)
 
     # Convert to (x,y) coordinates
-    xi = ri*np.cos(phii)
-    yi = ri*np.sin(phii)
+    xi = ri * np.cos(phii)
+    yi = ri * np.sin(phii)
 
     # Interpolate the true/POD-recon/predicted probe data onto the (xi,yi) mesh
     Bi = griddata((X[ind_Z0], Y[ind_Z0]), B_true[ind_Z0, frame],
@@ -397,30 +250,26 @@ def update_toroidal_movie(frame, X, Y, Z, B_true,
     fig = plt.figure(102, figsize=(7, 20))
     plt.subplot(3, 1, 1)
     if prefix[0:2] == 'Bv':
-        plt.pcolor(xi, yi, Bi*1.0e4, cmap='jet', vmin=-5e1, vmax=5e1)
+        plt.pcolor(xi, yi, Bi * 1.0e4, cmap='jet', vmin=-5e1, vmax=5e1)
     else:
-        plt.pcolor(xi, yi, Bi*1.0e4, cmap='jet', vmin=-5e2, vmax=5e2)
+        plt.pcolor(xi, yi, Bi * 1.0e4, cmap='jet', vmin=-5e2, vmax=5e2)
     ax = plt.gca()
     ax.axis('off')
     plt.subplot(3, 1, 2)
     if prefix[0:2] == 'Bv':
-        plt.pcolor(xi, yi, Bi_pod*1.0e4, cmap='jet', vmin=-5e1, vmax=5e1)
+        plt.pcolor(xi, yi, Bi_pod * 1.0e4, cmap='jet', vmin=-5e1, vmax=5e1)
     else:
-        plt.pcolor(xi, yi, Bi_pod*1.0e4, cmap='jet', vmin=-5e2, vmax=5e2)
+        plt.pcolor(xi, yi, Bi_pod * 1.0e4, cmap='jet', vmin=-5e2, vmax=5e2)
     ax = plt.gca()
     ax.axis('off')
     plt.subplot(3, 1, 3)
     if prefix[0:2] == 'Bv':
-        im = plt.pcolor(xi, yi, Bi_sim*1.0e4, cmap='jet', vmin=-5e1, vmax=5e1)
+        im = plt.pcolor(xi, yi, Bi_sim * 1.0e4, cmap='jet', vmin=-5e1, vmax=5e1)
     else:
-        im = plt.pcolor(xi, yi, Bi_sim*1.0e4, cmap='jet', vmin=-5e2, vmax=5e2)
+        im = plt.pcolor(xi, yi, Bi_sim * 1.0e4, cmap='jet', vmin=-5e2, vmax=5e2)
     ax = plt.gca()
     ax.axis('off')
     fig.subplots_adjust(right=0.75)
-
-    # Save picture of the contours on the first frame
-    if frame == 0:
-        plt.savefig('Pictures/'+prefix+'_contours.pdf')
 
 
 def plot_BOD_Espectrum(S):
@@ -437,7 +286,7 @@ def plot_BOD_Espectrum(S):
     """
     fig = plt.figure(figsize=(16, 7))
     plt.subplot(1, 2, 1)
-    plt.plot(S[0:30]/S[0], 'ko')
+    plt.plot(S[0:30] / S[0], 'ko')
     plt.yscale('log')
     plt.ylim(1e-4, 2)
     plt.box(on=None)
@@ -500,16 +349,16 @@ def make_evo_plots(x_dot, x_dot_train, x_dot_sim,
     r = x_true.shape[1]
     fig, axs = plt.subplots(r, 1, sharex=True, figsize=(7, 9))
     if r == 12 or r == 6:
-        fig, axs = plt.subplots(3, int(r/3), figsize=(16, 9))
+        fig, axs = plt.subplots(3, int(r / 3), figsize=(16, 9))
         axs = np.ravel(axs)
 
     # Loop over the r temporal Xdot modes that were fit
     for i in range(r):
-        axs[i].plot(t_test/1.0e3, x_dot[t_train.shape[0]:, i], color='k',
+        axs[i].plot(t_test / 1.0e3, x_dot[t_train.shape[0]:, i], color='k',
                     linewidth=2, label='numerical derivative')
         # axs[i].plot(t_train/1.0e3, x_dot_train[:, i], color='red',
         #             linewidth=2, label='model prediction')
-        axs[i].plot(t_test/1.0e3, x_dot_sim[:, i], color='r',
+        axs[i].plot(t_test / 1.0e3, x_dot_sim[:, i], color='r',
                     linewidth=2, label='model forecast')
         axs[i].set_yticklabels([])
         axs[i].set_xticklabels([])
@@ -522,12 +371,12 @@ def make_evo_plots(x_dot, x_dot_train, x_dot_sim,
     # Repeat for X
     fig, axs = plt.subplots(r, 1, sharex=True, figsize=(7, 9))
     if r == 12 or r == 6:
-        fig, axs = plt.subplots(3, int(r/3), figsize=(16, 9))
+        fig, axs = plt.subplots(3, int(r / 3), figsize=(16, 9))
         axs = np.ravel(axs)
     for i in range(r):
-        axs[i].plot(t_test/1.0e3, x_true[:, i], 'k',
+        axs[i].plot(t_test / 1.0e3, x_true[:, i], 'k',
                     linewidth=2, label='true simulation')
-        axs[i].plot(t_test/1.0e3, x_sim[:, i], color='r',
+        axs[i].plot(t_test / 1.0e3, x_sim[:, i], color='r',
                     linewidth=2, label='model forecast')
         axs[i].set_yticklabels([])
         axs[i].set_xticklabels([])
@@ -543,7 +392,7 @@ def make_3d_plots(x_true, x_sim, t_test, prefix, i, j, k):
     Plots in 3D the true evolution of X along with
     the model evolution of X for the test data.
 
-    Parameters#a
+    Parameters
     ----------
 
     x_true: 2D numpy array of floats
@@ -610,12 +459,14 @@ def make_3d_plots(x_true, x_sim, t_test, prefix, i, j, k):
     ani = animation.FuncAnimation(fig, update_manifold_movie,
                                   range(2, len(t_test)),
                                   fargs=(x_true, x_sim,
-                                         t_test, i, j, k), repeat=False,
-                                  interval=100, blit=False)
+                                         t_test, i, j, k), 
+                                  repeat=False,
+                                  interval=100,
+                                  blit=False)
 
     # Set the frames-per-second and save the animation
     FPS = 25
-    ani.save('Pictures/'+prefix+'manifold'+str(i)+str(j)+str(k)+'.mp4',
+    ani.save('Pictures/' + prefix + 'manifold' + str(i) + str(j) + str(k) + '.mp4',
              fps=FPS, dpi=100)
 
 
@@ -636,7 +487,7 @@ def plot_pod_temporal_modes(x, time):
 
     """
     r = np.shape(x)[1]
-    time = time/1.0e3
+    time = time / 1.0e3
     plt.figure(figsize=(8, 5))
 
     # Use gridspec to make a nice gridded plot with no internal spacings
@@ -646,7 +497,7 @@ def plot_pod_temporal_modes(x, time):
     # Loop over the first 12 normalized temporal modes
     for i in range(12):
         plt.subplot(gs1[i])
-        plt.plot(time, x[:, i]/np.max(abs(x[:, i])), 'k')
+        plt.plot(time, x[:, i] / np.max(abs(x[:, i])), 'k')
         ax = plt.gca()
         # ax.set_xticks([1.5, 2.75, 4.0])
         ax.set_xticks([1.0, 1.5, 2.0, 2.5, 3.0])
@@ -671,23 +522,23 @@ def plot_pod_temporal_modes(x, time):
     print(simps(x[:, 6], time)/(time[-1] - time[0]))
 
     # Now plot the fourier transforms OF THE MODES
-    time_uniform = np.linspace(time[0], time[-1], len(time)*2)
-    x_uniform = np.zeros((len(time)*2, x.shape[1]))
+    time_uniform = np.linspace(time[0], time[-1], len(time) * 2)
+    x_uniform = np.zeros((len(time) * 2, x.shape[1]))
 
     # Interpolate onto a uniform time base for the DFT
     for i in range(x.shape[1]):
         x_uniform[:, i] = np.interp(time_uniform, time, x[:, i])
-    fftx = np.fft.fft(x_uniform, axis=0)/len(time)
-    freq = np.fft.fftfreq(len(time_uniform), time_uniform[1]-time_uniform[0])
-    fftx = fftx[:len(time)-1, :]
-    freq = freq[:len(time)-1]
+    fftx = np.fft.fft(x_uniform, axis=0) / len(time)
+    freq = np.fft.fftfreq(len(time_uniform), time_uniform[1] - time_uniform[0])
+    fftx = fftx[:len(time) - 1, :]
+    freq = freq[:len(time) - 1]
 
     # Loop over the first 12 temporal mode FFTs
     for i in range(12):
-        plt.subplot(gs1[12+i])
+        plt.subplot(gs1[12 + i])
         plt.plot(freq, abs(fftx[:, i]), 'k', linewidth=3)
         ax = plt.gca()
-        ax.set_xticks([0, 14.5, 14.5*2, 14.5*3, 14.5*4, 14.5*5])
+        ax.set_xticks([0, 14.5, 14.5 * 2, 14.5 * 3, 14.5 * 4, 14.5 * 5])
         ax.set_xticklabels([])
         ax.set_yticks([])
         ax.set_yticklabels([])
@@ -730,21 +581,21 @@ def plot_pod_spatial_modes(X, Y, Z, U):
         The first 12 spatial modes from the SVD of the data matrix
 
     """
-    R = np.sqrt(X**2 + Y**2)
+    R = np.sqrt(X ** 2 + Y ** 2)
     # Find location where the probe Z location is approximately at Z=0
-    Z0 = np.isclose(Z, np.ones(len(Z))*min(abs(Z)), rtol=1e-3, atol=1e-3)
+    Z0 = np.isclose(Z, np.ones(len(Z)) * min(abs(Z)), rtol=1e-3, atol=1e-3)
 
     # Get the indices where Z=0
     ind_Z0 = [i for i, p in enumerate(Z0) if p]
 
     # Get the R and phi locations for the Z=0 probes
     ri = np.linspace(0, max(R[ind_Z0]), 40)
-    phii = np.linspace(0, 2*np.pi, 100)
+    phii = np.linspace(0, 2 * np.pi, 100)
     ri, phii = np.meshgrid(ri, phii)
 
     # Convert to (x,y) coordinates
-    xi = ri*np.cos(phii)
-    yi = ri*np.sin(phii)
+    xi = ri * np.cos(phii)
+    yi = ri * np.sin(phii)
     n_sample = len(R)
     U = U.real
     fig = plt.figure(figsize=(12, 12))
@@ -757,12 +608,12 @@ def plot_pod_spatial_modes(X, Y, Z, U):
     for i in range(6):
         # Loop over the first 12 POD modes
         for j in range(12):
-            U_sub = U[i*n_sample:(i+1)*n_sample, :]
+            U_sub = U[i * n_sample:(i + 1) * n_sample, :]
             # Interpolate spatial data onto the (xi, yi) grid
             U_grid = griddata((X[ind_Z0], Y[ind_Z0]), U_sub[ind_Z0, j],
                               (xi, yi), method='cubic')
-            plt.subplot(gs1[i+j*12])
-            plt.pcolor(xi, yi, U_grid/np.nanmax(np.nanmax(U_grid)),
+            plt.subplot(gs1[i + j * 12])
+            plt.pcolor(xi, yi, U_grid / np.nanmax(np.nanmax(U_grid)),
                        cmap='jet', vmin=-1e0, vmax=1e0)
             ax = plt.gca()
             ax.set_xticks([])
@@ -796,10 +647,10 @@ def plot_pairwise(x):
     # Loop over all r temporal POD modes being modeled
     for i in range(r):
         # Loop over remaining POD modes
-        for j in range(0, r-i):
+        for j in range(r - i):
             plt.subplot(gs1[i, j])
             ax = plt.gca()
-            plt.plot(x[:, i], x[:, r-j-1], 'k')
+            plt.plot(x[:, i], x[:, r - j - 1], 'k')
             ax.set_xticks([])
             ax.set_yticks([])
             ax.set_xticklabels([])
@@ -828,14 +679,14 @@ def plot_density(time, dens):
     """
 
     # Rescale to ms and m^-3
-    time = time/1.0e3
-    dens = dens/1.0e19
+    time = time / 1.0e3
+    dens = dens / 1.0e19
 
     # Pick some random locations to see density fluctuation sizes
     plt.figure(figsize=(10, 14))
     for i in range(12):
-        plt.subplot(6, 2, i+1)
-        plt.plot(time, dens[randint(0, dens.shape[0]-1), :], 'k')
+        plt.subplot(6, 2, i + 1)
+        plt.plot(time, dens[randint(0, dens.shape[0] - 1), :], 'k')
         plt.ylim(0.5, 3.5)
         ax = plt.gca()
         if i != 0 and i != 5:
@@ -896,22 +747,22 @@ def make_toroidal_movie(X, Y, Z, B_true, B_pod,
         Bx, By, Bz, Vx, Vy, Vz are all appropriate choices.
 
     """
-    R = np.sqrt(X**2 + Y**2)
+    R = np.sqrt(X ** 2 + Y ** 2)
 
     # Find location where the probe Z location is approximately at Z=0
-    Z0 = np.isclose(Z, np.ones(len(Z))*min(abs(Z)), rtol=1e-3, atol=1e-3)
+    Z0 = np.isclose(Z, np.ones(len(Z)) * min(abs(Z)), rtol=1e-3, atol=1e-3)
 
     # Get the indices where Z=0
     ind_Z0 = [i for i, p in enumerate(Z0) if p]
 
     # Get the R and phi locations for the Z=0 probes
     ri = np.linspace(0, max(R[ind_Z0]), 40)
-    phii = np.linspace(0, 2*np.pi, 100)
+    phii = np.linspace(0, 2 * np.pi, 100)
     ri, phii = np.meshgrid(ri, phii)
 
     # Convert to (x,y) coordinates
-    xi = ri*np.cos(phii)
-    yi = ri*np.sin(phii)
+    xi = ri * np.cos(phii)
+    yi = ri * np.sin(phii)
 
     # Interpolate measurements to the (xi,yi) mesh
     Bi = griddata((X[ind_Z0], Y[ind_Z0]), B_true[ind_Z0, 0],
@@ -924,30 +775,31 @@ def make_toroidal_movie(X, Y, Z, B_true, B_pod,
     # Setup figure for animation
     fig = plt.figure(102, figsize=(7, 20))
     plt.subplot(3, 1, 1)
-    plt.contourf(xi, yi, Bi*1.0e4, cmap='jet')
+    plt.contourf(xi, yi, Bi * 1.0e4, cmap='jet')
     ax = plt.gca()
     ax.axis('off')
     plt.colorbar()
     plt.subplot(3, 1, 2)
-    plt.contourf(xi, yi, Bi_pod*1.0e4, cmap='jet')
+    plt.contourf(xi, yi, Bi_pod * 1.0e4, cmap='jet')
     ax = plt.gca()
     ax.axis('off')
     plt.subplot(3, 1, 3)
-    plt.contourf(xi, yi, Bi_sim*1.0e4, cmap='jet')
+    plt.contourf(xi, yi, Bi_sim * 1.0e4, cmap='jet')
     ax = plt.gca()
     ax.axis('off')
 
     # Setup animation object, looping over times corresponding to test data
     ani = animation.FuncAnimation(fig, update_toroidal_movie,
-                                  range(0, len(t_test), 1),
+                                  range(0, len(t_test)),
                                   fargs=(X, Y, Z, B_true,
                                          B_pod, B_sim, t_test, prefix),
-                                  repeat=False, interval=100,
+                                  repeat=False, 
+                                  interval=100,
                                   blit=False)
 
     # Set frames-per-second and save the animation
     FPS = 30
-    ani.save('Pictures/'+prefix+'_toroidal_contour.mp4', fps=FPS, dpi=200)
+    ani.save('Pictures/' + prefix + '_toroidal_contour.mp4', fps=FPS, dpi=200)
 
 
 def make_poloidal_movie(X, Y, Z, B_true, B_pod, B_sim, t_test, prefix):
@@ -998,11 +850,11 @@ def make_poloidal_movie(X, Y, Z, B_true, B_pod, B_sim, t_test, prefix):
         Bx, By, Bz, Vx, Vy, Vz are all appropriate choices.
 
     """
-    R = X**2 + Y**2
+    R = np.sqrt(X ** 2 + Y ** 2)
 
     # Find where X > 0 and Y = 0 (so a poloidal cross-section)
     X0 = np.ravel(np.where(np.array(X) > 0.0))
-    Y0 = np.isclose(Y, np.ones(len(Y))*min(abs(Y)), rtol=1e-3, atol=1e-3)
+    Y0 = np.isclose(Y, np.ones(len(Y)) * min(abs(Y)), rtol=1e-3, atol=1e-3)
 
     # Get indices with both X > 0 and Y = 0
     ind_Y0 = [i for i, p in enumerate(Y0) if p]
@@ -1024,30 +876,31 @@ def make_poloidal_movie(X, Y, Z, B_true, B_pod, B_sim, t_test, prefix):
     # Setup figure for animation
     fig = plt.figure(103, figsize=(5, 20))
     plt.subplot(3, 1, 1)
-    plt.contourf(xi, zi, Bi*1.0e4, cmap='jet')
+    plt.contourf(xi, zi, Bi * 1.0e4, cmap='jet')
     ax = plt.gca()
     ax.axis('off')
     plt.colorbar()
     plt.subplot(3, 1, 2)
-    plt.contourf(xi, zi, Bi_pod*1.0e4, cmap='jet')
+    plt.contourf(xi, zi, Bi_pod * 1.0e4, cmap='jet')
     ax = plt.gca()
     ax.axis('off')
     plt.subplot(3, 1, 3)
-    plt.contourf(xi, zi, Bi_sim*1.0e4, cmap='jet')
+    plt.contourf(xi, zi, Bi_sim * 1.0e4, cmap='jet')
     ax = plt.gca()
     ax.axis('off')
 
     # Setup animation object, looping over times corresponding to testing data
     ani = animation.FuncAnimation(fig, update_poloidal_movie,
-                                  range(0, len(t_test), 1),
+                                  range(0, len(t_test)),
                                   fargs=(X, Y, Z, B_true, B_pod,
                                          B_sim, t_test, prefix),
-                                  repeat=False, interval=100,
+                                  repeat=False,
+                                  interval=100,
                                   blit=False)
 
     # Set frames-per-second and save animation
     FPS = 30
-    ani.save('Pictures/'+prefix+'_poloidal_contour.mp4', fps=FPS, dpi=200)
+    ani.save('Pictures/' + prefix + '_poloidal_contour.mp4', fps=FPS, dpi=200)
 
 
 def update_poloidal_movie(frame, X, Y, Z, B_true,
@@ -1105,10 +958,10 @@ def update_poloidal_movie(frame, X, Y, Z, B_true,
 
     """
     print(frame)
-    R = np.sqrt(X**2 + Y**2)
+    R = np.sqrt(X ** 2 + Y ** 2)
     # Find where X > 0 and Y = 0 (so a poloidal cross-section)
     X0 = np.ravel(np.where(np.array(X) > 0.0))
-    Y0 = np.isclose(Y, np.ones(len(Y))*min(abs(Y)), rtol=1e-3, atol=1e-3)
+    Y0 = np.isclose(Y, np.ones(len(Y)) * min(abs(Y)), rtol=1e-3, atol=1e-3)
 
     # Get indices with both X > 0 and Y = 0
     ind_Y0 = [i for i, p in enumerate(Y0) if p]
@@ -1134,27 +987,27 @@ def update_poloidal_movie(frame, X, Y, Z, B_true,
     fig = plt.figure(103, figsize=(5, 20))
     plt.subplot(3, 1, 1)
     if prefix[0:2] == 'Bv':
-        plt.pcolor(xi, zi, Bi*1.0e4, cmap='jet', vmin=-5e1, vmax=5e1)
+        plt.pcolor(xi, zi, Bi * 1.0e4, cmap='jet', vmin=-5e1, vmax=5e1)
     else:
-        plt.pcolor(xi, zi, Bi*1.0e4, cmap='jet', vmin=-5e2, vmax=5e2)
+        plt.pcolor(xi, zi, Bi * 1.0e4, cmap='jet', vmin=-5e2, vmax=5e2)
     ax = plt.gca()
     ax.axis('off')
     plt.subplot(3, 1, 2)
     if prefix[0:2] == 'Bv':
-        plt.pcolor(xi, zi, Bi_pod*1.0e4, cmap='jet', vmin=-5e1, vmax=5e1)
+        plt.pcolor(xi, zi, Bi_pod * 1.0e4, cmap='jet', vmin=-5e1, vmax=5e1)
     else:
-        plt.pcolor(xi, zi, Bi_pod*1.0e4, cmap='jet', vmin=-5e2, vmax=5e2)
+        plt.pcolor(xi, zi, Bi_pod * 1.0e4, cmap='jet', vmin=-5e2, vmax=5e2)
     ax = plt.gca()
     ax.axis('off')
     plt.subplot(3, 1, 3)
     if prefix[0:2] == 'Bv':
-        im = plt.pcolor(xi, zi, Bi_sim*1.0e4, cmap='jet', vmin=-5e1, vmax=5e1)
+        im = plt.pcolor(xi, zi, Bi_sim * 1.0e4, cmap='jet', vmin=-5e1, vmax=5e1)
     else:
-        im = plt.pcolor(xi, zi, Bi_sim*1.0e4, cmap='jet', vmin=-5e2, vmax=5e2)
+        im = plt.pcolor(xi, zi, Bi_sim * 1.0e4, cmap='jet', vmin=-5e2, vmax=5e2)
     ax = plt.gca()
     ax.axis('off')
     fig.subplots_adjust(right=0.75)
 
     # Save picture at first frame
     if frame == 0:
-        plt.savefig('Pictures/'+prefix+'_poloidal_contours.pdf')
+        plt.savefig('Pictures/' + prefix + '_poloidal_contours.pdf')
