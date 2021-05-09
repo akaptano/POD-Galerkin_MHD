@@ -5,7 +5,7 @@ from pysindy.differentiation import FiniteDifference
 from sindy_utils import *
 from scipy.integrate import odeint
 from scipy.linalg import eig
-from pysindy.utils.pareto import pareto_curve
+# from pysindy.utils.pareto import pareto_curve
 from pysindy.optimizers import ConstrainedSR3
 
 
@@ -119,10 +119,10 @@ def compressible_Framework(inner_prod, time, poly_order, threshold,
                             function_names=library_function_names)
 
     # Now set the constraint on the linear and/or quadratic model terms.
-    constraint_zeros = np.zeros(int(r*(r+1)/2))
+    #constraint_zeros = np.zeros(int(r*(r+1)/2))
     # constraint vector below is for a quadratic model constraint
-    # constraint_zeros = np.zeros(int(r*(r+1)/2)+
-    #                              r+r*(r-1)+int(r*(r-1)*(r-2)/6.0))
+    constraint_zeros = np.zeros(int(r*(r+1)/2)+
+                                  r+r*(r-1)+int(r*(r-1)*(r-2)/6.0))
     if poly_order == 1:
         constraint_matrix = np.zeros((int(r*(r+1)/2), r**2))
         for i in range(r):
@@ -137,10 +137,10 @@ def compressible_Framework(inner_prod, time, poly_order, threshold,
                 q = q + 1
     else:
         if poly_order == 2:
-            constraint_matrix = np.zeros((int(r*(r+1)/2), int(r*(r**2+3*r)/2)))
+            #constraint_matrix = np.zeros((int(r*(r+1)/2), int(r*(r**2+3*r)/2)))
             # constraint matrix below is for a quadratic model constraint
-            # constraint_matrix = np.zeros((int(r*(r+1)/2)+r+r*(r-1)+
-            #                     int(r*(r-1)*(r-2)/6.0), int(r*(r**2+3*r)/2)))
+            constraint_matrix = np.zeros((int(r*(r+1)/2)+r+r*(r-1)+
+                                 int(r*(r-1)*(r-2)/6.0), int(r*(r**2+3*r)/2)))
 
         # Easy addition: the linear model constraint for models with
         #                poly_order > 2 is the same because the linear
@@ -165,33 +165,33 @@ def compressible_Framework(inner_prod, time, poly_order, threshold,
         # Uncomment lines below to implement the quadratic model constraint
 
         # Set coefficients adorning terms like a_i^3 to zero
-        # for i in range(r):
-        #     constraint_matrix[q, r*(int((r**2+3*r)/2.0)-r) + i*(r+1)] = 1.0
-        #     q = q + 1
+        for i in range(r):
+            constraint_matrix[q, r*(int((r**2+3*r)/2.0)-r) + i*(r+1)] = 1.0
+            q = q + 1
 
         # Set coefficients adorning terms like a_ia_j^2 to be antisymmetric
-        # for i in range(r):
-        #    for j in range(i+1, r):
-        #        constraint_matrix[q, r*(int((r**2+3*r)/2.0)-r+j)+i] = 1.0
-        #        constraint_matrix[q, r*(r+j-1)+j+r*int(i*(2*r-i-3)/2.0)] = 1.0
-        #        q = q + 1
-        # for i in range(r):
-        #    for j in range(0, i):
-        #        constraint_matrix[q, r*(int((r**2+3*r)/2.0)-r+j)+i] = 1.0
-        #        constraint_matrix[q, r*(r+i-1)+j+r*int(j*(2*r-j-3)/2.0)] = 1.0
-        #        q = q + 1
+        for i in range(r):
+           for j in range(i+1, r):
+               constraint_matrix[q, r*(int((r**2+3*r)/2.0)-r+j)+i] = 1.0
+               constraint_matrix[q, r*(r+j-1)+j+r*int(i*(2*r-i-3)/2.0)] = 1.0
+               q = q + 1
+        for i in range(r):
+           for j in range(0, i):
+               constraint_matrix[q, r*(int((r**2+3*r)/2.0)-r+j)+i] = 1.0
+               constraint_matrix[q, r*(r+i-1)+j+r*int(j*(2*r-j-3)/2.0)] = 1.0
+               q = q + 1
 
         # Set coefficients adorning terms like a_ia_ja_k to be antisymmetric
-        # for i in range(r):
-        #     for j in range(i+1, r):
-        #         for k in range(j+1, r):
-        #             constraint_matrix[
-        #                 q, r*(r+k-1)+i+r*int(j*(2*r-j-3)/2.0)] = 1.0
-        #             constraint_matrix[
-        #                 q, r*(r+k-1)+j+r*int(i*(2*r-i-3)/2.0)] = 1.0
-        #             constraint_matrix[
-        #                 q, r*(r+j-1)+k+r*int(i*(2*r-i-3)/2.0)] = 1.0
-        #             q = q + 1
+        for i in range(r):
+            for j in range(i+1, r):
+                for k in range(j+1, r):
+                    constraint_matrix[
+                        q, r*(r+k-1)+i+r*int(j*(2*r-j-3)/2.0)] = 1.0
+                    constraint_matrix[
+                        q, r*(r+k-1)+j+r*int(i*(2*r-i-3)/2.0)] = 1.0
+                    constraint_matrix[
+                        q, r*(r+j-1)+k+r*int(i*(2*r-i-3)/2.0)] = 1.0
+                    q = q + 1
 
     # split the temporal POD modes into testing and training
     x_train = x[:M_train, :]
@@ -205,9 +205,11 @@ def compressible_Framework(inner_prod, time, poly_order, threshold,
         linear_r4_mat = np.zeros((r, r+int(r*(r+1)/2)))
         linear_r4_mat[0, 1] = 0.091
         linear_r4_mat[1, 0] = -0.091
-        # linear_r4_mat[2, 3] = 0.182
-        # linear_r4_mat[3, 2] = -0.182
-        thresholds = threshold * np.ones((r, r + int(r * (r + 1) / 2)))
+        linear_r4_mat[2, 3] = 0.182
+        linear_r4_mat[3, 2] = -0.182
+        linear_r4_mat[5, 4] = -3 * 0.091
+        linear_r4_mat[4, 5] = 3 * 0.091
+        #thresholds = threshold * np.ones((r, r + int(r * (r + 1) / 2)))
         # For run 1
         # thresholds[0:2, 2:] = 30 * threshold * np.ones(
         #                            thresholds[0:2, 2:].shape)
@@ -223,20 +225,27 @@ def compressible_Framework(inner_prod, time, poly_order, threshold,
         # thresholds[r:, 3] = 0.05 * np.ones(thresholds[r:, 3].shape)
         # thresholds[r:, 4:6] = 0.03 * np.ones(thresholds[r:, 4:6].shape)
         #
+
         # For run 2
-        thresholds[0:2, r:] = 30 * threshold*np.ones(thresholds[0:2, r:].shape)
-        thresholds[2:, :r] = 0.01 * np.ones(thresholds[2:, :r].shape)
-        thresholds[5, r:] = 0.002 * np.ones(thresholds[5, r:].shape)
-        thresholds[6:, :] = 0.01 * np.ones(thresholds[6:, :].shape)
+        #thresholds[0:2, r:] = 30 * threshold*np.ones(thresholds[0:2, r:].shape)
+        #thresholds[2:, :r] = 0.01 * np.ones(thresholds[2:, :r].shape)
+        #thresholds[5, r:] = 0.002 * np.ones(thresholds[5, r:].shape)
+        #thresholds[6:, :] = 0.01 * np.ones(thresholds[6:, :].shape)
 
-        # Multiple-threshold constrained optimizer
-
-        sindy_opt = ConstrainedSR3(threshold=threshold, nu=10, max_iter=50000,
+        # fully constrained run 1
+        sindy_opt = ConstrainedSR3(threshold=threshold, nu=1, max_iter=600,
                                    constraint_lhs=constraint_matrix,
                                    constraint_rhs=constraint_zeros, tol=1e-5,
-                                   thresholder='weighted_l0',
-                                   initial_guess=linear_r4_mat,
-                                   thresholds=thresholds)
+                                   thresholder='l0',
+                                   initial_guess=linear_r4_mat)
+
+        # Multiple-threshold constrained optimizer
+        #sindy_opt = ConstrainedSR3(threshold=threshold, nu=10, max_iter=50000,
+        #                           constraint_lhs=constraint_matrix,
+        #                           constraint_rhs=constraint_zeros, tol=1e-5,
+        #                           thresholder='weighted_l0',
+        #                           initial_guess=linear_r4_mat,
+        #                           thresholds=thresholds)
 
         # Single threshold constrained optimizer
 
@@ -270,23 +279,22 @@ def compressible_Framework(inner_prod, time, poly_order, threshold,
     # flag for pareto landscape plots
     if do_pareto:
         pareto_thresholds = np.linspace(0.0, 5.0*threshold, 50)
-        pareto_curve(sindy_opt, sindy_library, FiniteDifference, feature_names,
-                     discrete_time=False, n_jobs=1,
-                     thresholds=pareto_thresholds,
-                     x_fit=x_train, x_pred=x_test,
-                     t_fit=t_train, t_pred=t_test)
+        #pareto_curve(sindy_opt, sindy_library, FiniteDifference, feature_names,
+        #             discrete_time=False, n_jobs=1,
+        #             thresholds=pareto_thresholds,
+        #             x_fit=x_train, x_pred=x_test,
+        #             t_fit=t_train, t_pred=t_test)
         return
 
     # Otherwise, continue with the fitting and plotting
     model.fit(x_train, t=t_train, unbias=False)
     print(model.coefficients())
-    x_train_SINDy, output = model.simulate(x[0, :], t_train, integrator=odeint,
-                                           stop_condition=None,
-                                           full_output=True,
-                                           rtol=1e-20, h0=1e-5)
-    x_sim, output = model.simulate(x0_test, t_test, integrator=odeint,
-                                   stop_condition=None, full_output=True,
-                                   rtol=1e-20, h0=1e-5)
+    integrator_keywords = {}
+    integrator_keywords['rtol'] = 1e-20
+    integrator_keywords['h0'] = 1e-5
+    x_train_SINDy = model.simulate(x[0, :], t_train, integrator=odeint,
+                                           stop_condition=None,integrator_kws=integrator_keywords)
+    x_sim = model.simulate(x0_test, t_test, integrator=odeint,stop_condition=None,integrator_kws=integrator_keywords)
     x_dot = model.differentiate(x, t=time)
     x_dot_train = model.predict(x_train)
     x_dot_sim = model.predict(x_true)
@@ -297,7 +305,7 @@ def compressible_Framework(inner_prod, time, poly_order, threshold,
                    x_true, x_sim, time, t_train, t_test)
 
     # Make a table of the identified model coefficients
-    make_table(model, feature_names)
+    # make_table(model, feature_names)
 
     # Makes 3D plots of the a_i, a_j, a_k state space
     if do_manifoldplots:
@@ -368,7 +376,7 @@ def vector_POD(inner_prod, t_train, r):
     Vh = np.transpose(v)
 
     # Plot temporal eigenvectors and associated eigenvalues
-    plot_pod_temporal_modes(v[:, 0:12], t_train)
+    plot_pod_temporal_modes(v[:, 0:20], t_train)
     plot_BOD_Espectrum(S2)
     print("% field in first r modes = ",
           sum(np.sqrt(S2[0:r]))/sum(np.sqrt(S2)))

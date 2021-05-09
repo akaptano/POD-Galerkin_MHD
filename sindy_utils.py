@@ -394,7 +394,7 @@ def update_toroidal_movie(frame, X, Y, Z, B_true,
     plt.clf()
 
     # Plotting, with scaling depending on if this is B or V field.
-    fig = plt.figure(102, figsize=(5, 20))
+    fig = plt.figure(102, figsize=(7, 20))
     plt.subplot(3, 1, 1)
     if prefix[0:2] == 'Bv':
         plt.pcolor(xi, yi, Bi*1.0e4, cmap='jet', vmin=-5e1, vmax=5e1)
@@ -770,7 +770,7 @@ def plot_pod_spatial_modes(X, Y, Z, U):
 
     # Save figure
     plt.savefig('Pictures/spatial_modes.pdf', dpi=50)
-    # np.savetxt("Pictures/compressible1_spatialmodes.csv", U, delimiter=",")
+    np.savetxt("Pictures/compressible1_spatialmodes.csv", U, delimiter=",")
 
 
 def plot_pairwise(x):
@@ -922,7 +922,7 @@ def make_toroidal_movie(X, Y, Z, B_true, B_pod,
                       (xi, yi), method='cubic')
 
     # Setup figure for animation
-    fig = plt.figure(102, figsize=(5, 20))
+    fig = plt.figure(102, figsize=(7, 20))
     plt.subplot(3, 1, 1)
     plt.contourf(xi, yi, Bi*1.0e4, cmap='jet')
     ax = plt.gca()

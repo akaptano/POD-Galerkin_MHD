@@ -53,7 +53,7 @@ from dmd import dmd
 is_incompressible = False
 do_pareto = False
 do_contouranimations = True
-do_manifoldplots = True
+do_manifoldplots = False
 
 # set some of the model and SINDy hyperparameters
 if is_incompressible:
@@ -66,15 +66,27 @@ if is_incompressible:
     path_plus_prefix = '../HITSI_rMHD_HR'  # path for the data read
     time = np.loadtxt('../time.csv')  # load in the corresponding times
 else:
-    r = 8
+    #r = 10 # 16
+    r = 16
     poly_order = 2
-    threshold = 0.05
-    start = 80000
-    end = 270000
+    # threshold = 0.0
+    # threshold = 0.004
+    threshold = 0.004
+    # start = 80000
+    start = 150000
+    # start = 0 # 150000
+    # end = 270000
+    end = 399000
+    # end = 30000
     skip = 100
-    tfac = 6.0/10.0
-    path_plus_prefix = '../compressible2/HITSI_rMHD_HR'
-    time = np.loadtxt('../compressible2/time.csv')
+    #skip = 10
+    tfac = 8.0/10.0
+    #path_plus_prefix = '../compressible2/HITSI_rMHD_HR'
+    path_plus_prefix = '../compressible1/HITSI_rMHD_HR'
+    #path_plus_prefix = '../spheromak_tilt1/spheromak_tilt1'
+    # time = np.loadtxt('../compressible2/time.csv')
+    time = np.loadtxt('../compressible1/time.csv')
+    #time = np.loadtxt('../spheromak_tilt1/time.csv')
 
 # Define and load in the measurement time sampling and mesh data
 spacing = float(skip)
@@ -122,6 +134,8 @@ Q = np.vstack((Q, Vz_mat))
 R = np.ravel([R, R, R, R, R, R])
 inner_prod = inner_product(Q, R)*dR*dphi*dZ
 Q = Q*1e4  # convert from Tesla to Gauss
+print('Data fully loaded')
+print(X.shape, Z.shape, Q.shape, Bz_mat.shape)
 
 # This generates a pareto landscape in (r, lambda), which is a useful
 # way to visualize the space of possible SINDy models.
@@ -136,132 +150,137 @@ t_test, x_true, x_sim, S2, x_train_SINDy = compressible_Framework(
                                             inner_prod, time, poly_order,
                                             threshold, r, tfac,
                                             do_manifoldplots, False)
+print('Done with SINDy')
 
 # Define portions of the data for testing/training
 M_test = len(t_test)
 M_train = int(len(time)*tfac)
 t_train = time[:M_train]
-Q_test = Q[:, M_train:]
+#Q_test = Q[:, M_train:]
 Vh_true = np.transpose(x_true)
 Vh_sim = np.transpose(x_sim)
 Sr = np.sqrt(S2[0:r, 0:r])
 w, v = eig(inner_prod)
-Vh = np.transpose(v)
+Vh = np.transpose(v).real
 wr = np.sqrt(np.diag(w))
 
+print(Q.shape, Vh.shape, wr.shape, np.linalg.inv(wr).shape, r)
 # Compute the POD and SINDy reconstructions of Q
-U = Q@(np.transpose(Vh)@
-       (np.linalg.inv(wr)[:, 0:12]))  # our full data requires ~ few GB memory
+U = Q@(np.transpose(Vh)[:,:2*r]@
+        (np.linalg.inv(wr)[:2*r, :r]).real)  # our full data requires ~ few GB memory
 plot_pod_spatial_modes(X, Y, Z, U)
+exit()
 U_true = U[:, 0:r]
-Q_pod = U_true@wr[0:r, 0:r]@Vh_true
-Q_sim = U_true@wr[0:r, 0:r]@Vh_sim
-dmd_Q = dmd(Q, 16, time, M_train)
+#Q_pod = U_true@wr[0:r, 0:r]@Vh_true
+Q_sim = (U_true@wr[0:r, 0:r]@Vh_sim).real
+del U, U_true, Bx_mat, By_mat, Bz_mat, Vx_mat, Vy_mat, Vz_mat
+dmd_Q = dmd(Q, 2*r, time, M_train)
 
+print('Done with POD, SINDy, and DMD, now plotting')
 # plot probe reconstruction and contour animations
-plot_measurement(Q_test, Q_pod, Q_sim, t_test, r)
+# plot_measurement(Q_test, Q_pod, Q_sim, t_test, r)
 if do_contouranimations:
-    Q_pod = Q_pod/1.0e4
-    Q_sim = Q_sim/1.0e4
-    Bx_mat_sim = Q_sim[0:1*n_samples, :]
-    By_mat_sim = Q_sim[1*n_samples:2*n_samples, :]
-    Bz_mat_sim = Q_sim[2*n_samples:3*n_samples, :]
-    Vx_mat_sim = Q_sim[3*n_samples:4*n_samples, :]
-    Vy_mat_sim = Q_sim[4*n_samples:5*n_samples, :]
-    Vz_mat_sim = Q_sim[5*n_samples:6*n_samples, :]
-    Bx_mat_pod = Q_pod[0:1*n_samples, :]
-    By_mat_pod = Q_pod[1*n_samples:2*n_samples, :]
-    Bz_mat_pod = Q_pod[2*n_samples:3*n_samples, :]
-    Vx_mat_pod = Q_pod[3*n_samples:4*n_samples, :]
-    Vy_mat_pod = Q_pod[4*n_samples:5*n_samples, :]
-    Vz_mat_pod = Q_pod[5*n_samples:6*n_samples, :]
-    make_toroidal_movie(X, Y, Z, Bx_mat[:, M_train:],
-                        np.real(Bx_mat_pod), np.real(Bx_mat_sim),
-                        t_test, 'Bx')
-    make_toroidal_movie(X, Y, Z, By_mat[:, M_train:],
-                        np.real(By_mat_pod), np.real(By_mat_sim),
-                        t_test, 'By')
-    make_toroidal_movie(X, Y, Z, Bz_mat[:, M_train:],
-                        np.real(Bz_mat_pod), np.real(Bz_mat_sim),
-                        t_test, 'Bz')
-    make_toroidal_movie(X, Y, Z, Vx_mat[:, M_train:],
-                        np.real(Vx_mat_pod), np.real(Vx_mat_sim),
-                        t_test, 'Bvx')
-    make_toroidal_movie(X, Y, Z, Vy_mat[:, M_train:],
-                        np.real(Vy_mat_pod), np.real(Vy_mat_sim),
-                        t_test, 'Bvy')
-    make_toroidal_movie(X, Y, Z, Vz_mat[:, M_train:],
-                        np.real(Vz_mat_pod), np.real(Vz_mat_sim),
-                        t_test, 'Bvz')
+    #Q_pod = Q_pod/1.0e4
+    #Q_sim = Q_sim/1.0e4
+    #Bx_mat_sim = Q_sim[0:1*n_samples, :]
+    #By_mat_sim = Q_sim[1*n_samples:2*n_samples, :]
+    #Bz_mat_sim = Q_sim[2*n_samples:3*n_samples, :]
+    #Vx_mat_sim = Q_sim[3*n_samples:4*n_samples, :]
+    #Vy_mat_sim = Q_sim[4*n_samples:5*n_samples, :]
+    #Vz_mat_sim = Q_sim[5*n_samples:6*n_samples, :]
+    #Bx_mat_pod = Q_pod[0:1*n_samples, :]
+    #By_mat_pod = Q_pod[1*n_samples:2*n_samples, :]
+    #Bz_mat_pod = Q_pod[2*n_samples:3*n_samples, :]
+    #Vx_mat_pod = Q_pod[3*n_samples:4*n_samples, :]
+    #Vy_mat_pod = Q_pod[4*n_samples:5*n_samples, :]
+    #Vz_mat_pod = Q_pod[5*n_samples:6*n_samples, :]
+#    make_toroidal_movie(X, Y, Z, Bx_mat[:, M_train:],
+#                        Bx_mat_pod), Bx_mat_sim),
+#                        t_test, 'Bx')
+#    make_toroidal_movie(X, Y, Z, By_mat[:, M_train:],
+#                        By_mat_pod), By_mat_sim),
+#                        t_test, 'By')
+#    make_toroidal_movie(X, Y, Z, Bz_mat[:, M_train:],
+#                        Bz_mat_pod), Bz_mat_sim),
+#                        t_test, 'Bz')
+#    make_toroidal_movie(X, Y, Z, Vx_mat[:, M_train:],
+#                        Vx_mat_pod), Vx_mat_sim),
+#                        t_test, 'Bvx')
+#    make_toroidal_movie(X, Y, Z, Vy_mat[:, M_train:],
+#                        Vy_mat_pod), Vy_mat_sim),
+#                        t_test, 'Bvy')
+#    make_toroidal_movie(X, Y, Z, Vz_mat[:, M_train:],
+#                        Vz_mat_pod), Vz_mat_sim),
+#                        t_test, 'Bvz')
 
     # repeat for DMD reconstructions
-    make_toroidal_movie(X, Y, Z, Bx_mat[:, M_train:],
-                        np.real(dmd_Q[0*n_samples:1*n_samples, :]/1e4),
-                        np.real(Q_sim[0*n_samples:1*n_samples, :]/1e4),
+    make_toroidal_movie(X, Y, Z, Q[0*n_samples:1*n_samples, M_train:]/1e4,
+                        dmd_Q[0*n_samples:1*n_samples, :]/1e4,
+                        Q_sim[0*n_samples:1*n_samples, :]/1e4,
                         t_test, 'Bx')
-    make_toroidal_movie(X, Y, Z, By_mat[:, M_train:],
-                        np.real(dmd_Q[1*n_samples:2*n_samples, :]/1e4),
-                        np.real(Q_sim[1*n_samples:2*n_samples, :]/1e4),
+    make_toroidal_movie(X, Y, Z, Q[1*n_samples:2*n_samples, M_train:]/1e4,
+                        dmd_Q[1*n_samples:2*n_samples, :]/1e4,
+                        Q_sim[1*n_samples:2*n_samples, :]/1e4,
                         t_test, 'By')
-    make_toroidal_movie(X, Y, Z, Bz_mat[:, M_train:],
-                        np.real(dmd_Q[2*n_samples:3*n_samples, :]/1e4),
-                        np.real(Q_sim[2*n_samples:3*n_samples, :]/1e4),
+    make_toroidal_movie(X, Y, Z, Q[2*n_samples:3*n_samples, M_train:]/1e4,
+                        dmd_Q[2*n_samples:3*n_samples, :]/1e4,
+                        Q_sim[2*n_samples:3*n_samples, :]/1e4,
                         t_test, 'Bz')
-    make_toroidal_movie(X, Y, Z, Vx_mat[:, M_train:],
-                        np.real(dmd_Q[3*n_samples:4*n_samples, :]/1e4),
-                        np.real(Q_sim[3*n_samples:4*n_samples, :]/1e4),
+    make_toroidal_movie(X, Y, Z, Q[3*n_samples:4*n_samples, M_train:]/1e4,
+                        dmd_Q[3*n_samples:4*n_samples, :]/1e4,
+                        Q_sim[3*n_samples:4*n_samples, :]/1e4,
                         t_test, 'Bvx')
-    make_toroidal_movie(X, Y, Z, Vy_mat[:, M_train:],
-                        np.real(dmd_Q[4*n_samples:5*n_samples, :]/1e4),
-                        np.real(Q_sim[4*n_samples:5*n_samples, :]/1e4),
+    make_toroidal_movie(X, Y, Z, Q[4*n_samples:5*n_samples, M_train:]/1e4,
+                        dmd_Q[4*n_samples:5*n_samples, :]/1e4,
+                        Q_sim[4*n_samples:5*n_samples, :]/1e4,
                         t_test, 'Bvy')
-    make_toroidal_movie(X, Y, Z, Vz_mat[:, M_train:],
-                        np.real(dmd_Q[5*n_samples:6*n_samples, :]/1e4),
-                        np.real(Q_sim[5*n_samples:6*n_samples, :]/1e4),
+    make_toroidal_movie(X, Y, Z, Q[5*n_samples:6*n_samples, M_train:]/1e4,
+                        dmd_Q[5*n_samples:6*n_samples, :]/1e4,
+                        Q_sim[5*n_samples:6*n_samples, :]/1e4,
                         t_test, 'Bvz')
 
     # Repeat for poloidal contour movies
-    make_poloidal_movie(X, Y, Z, Bx_mat[:, M_train:],
-                        np.real(Bx_mat_pod), np.real(Bx_mat_sim),
-                        t_test, 'Bx')
-    make_poloidal_movie(X, Y, Z, By_mat[:, M_train:],
-                        np.real(By_mat_pod), np.real(By_mat_sim),
-                        t_test, 'By')
-    make_poloidal_movie(X, Y, Z, Bz_mat[:, M_train:],
-                        np.real(Bz_mat_pod), np.real(Bz_mat_sim),
-                        t_test, 'Bz')
-    make_poloidal_movie(X, Y, Z, Vx_mat[:, M_train:],
-                        np.real(Vx_mat_pod), np.real(Vx_mat_sim),
-                        t_test, 'Bvx')
-    make_poloidal_movie(X, Y, Z, Vy_mat[:, M_train:],
-                        np.real(Vy_mat_pod), np.real(Vy_mat_sim),
-                        t_test, 'Bvy')
-    make_poloidal_movie(X, Y, Z, Vz_mat[:, M_train:],
-                        np.real(Vz_mat_pod), np.real(Vz_mat_sim),
-                        t_test, 'Bvz')
+#    make_poloidal_movie(X, Y, Z, Bx_mat[:, M_train:],
+#                        Bx_mat_pod), Bx_mat_sim),
+#                        t_test, 'Bx')
+#    make_poloidal_movie(X, Y, Z, By_mat[:, M_train:],
+#                        By_mat_pod), By_mat_sim),
+#                        t_test, 'By')
+#    make_poloidal_movie(X, Y, Z, Bz_mat[:, M_train:],
+#                        Bz_mat_pod), Bz_mat_sim),
+#                        t_test, 'Bz')
+#    make_poloidal_movie(X, Y, Z, Vx_mat[:, M_train:],
+#                        Vx_mat_pod), Vx_mat_sim),
+#                        t_test, 'Bvx')
+#    make_poloidal_movie(X, Y, Z, Vy_mat[:, M_train:],
+#                        Vy_mat_pod), Vy_mat_sim),
+#                        t_test, 'Bvy')
+#    make_poloidal_movie(X, Y, Z, Vz_mat[:, M_train:],
+#                        Vz_mat_pod), Vz_mat_sim),
+#                        t_test, 'Bvz')
 
     # Repeat for DMD
-    make_poloidal_movie(X, Y, Z, Bx_mat[:, M_train:],
-                        np.real(dmd_Q[0*n_samples:1*n_samples, :]/1e4),
-                        np.real(Q_sim[0*n_samples:1*n_samples, :]/1e4),
+    make_poloidal_movie(X, Y, Z, Q[0*n_samples:1*n_samples, M_train:]/1e4,
+                        dmd_Q[0*n_samples:1*n_samples, :]/1e4,
+                        Q_sim[0*n_samples:1*n_samples, :]/1e4,
                         t_test, 'Bx')
-    make_poloidal_movie(X, Y, Z, By_mat[:, M_train:],
-                        np.real(dmd_Q[1*n_samples:2*n_samples, :]/1e4),
-                        np.real(Q_sim[1*n_samples:2*n_samples, :]/1e4),
+    make_poloidal_movie(X, Y, Z, Q[1*n_samples:2*n_samples, M_train:]/1e4,
+                        dmd_Q[1*n_samples:2*n_samples, :]/1e4,
+                        Q_sim[1*n_samples:2*n_samples, :]/1e4,
                         t_test, 'By')
-    make_poloidal_movie(X, Y, Z, Bz_mat[:, M_train:],
-                        np.real(dmd_Q[2*n_samples:3*n_samples, :]/1e4),
-                        np.real(Q_sim[2*n_samples:3*n_samples, :]/1e4),
+    make_poloidal_movie(X, Y, Z, Q[2*n_samples:3*n_samples, M_train:]/1e4,
+                        dmd_Q[2*n_samples:3*n_samples, :]/1e4,
+                        Q_sim[2*n_samples:3*n_samples, :]/1e4,
                         t_test, 'Bz')
-    make_poloidal_movie(X, Y, Z, Vx_mat[:, M_train:],
-                        np.real(dmd_Q[3*n_samples:4*n_samples, :]/1e4),
-                        np.real(Q_sim[3*n_samples:4*n_samples, :]/1e4),
+    make_poloidal_movie(X, Y, Z, Q[3*n_samples:4*n_samples, M_train:]/1e4,
+                        dmd_Q[3*n_samples:4*n_samples, :]/1e4,
+                        Q_sim[3*n_samples:4*n_samples, :]/1e4,
                         t_test, 'Bvx')
-    make_poloidal_movie(X, Y, Z, Vy_mat[:, M_train:],
-                        np.real(dmd_Q[4*n_samples:5*n_samples, :]/1e4),
-                        np.real(Q_sim[4*n_samples:5*n_samples, :]/1e4),
+    make_poloidal_movie(X, Y, Z, Q[4*n_samples:5*n_samples, M_train:]/1e4,
+                        dmd_Q[4*n_samples:5*n_samples, :]/1e4,
+                        Q_sim[4*n_samples:5*n_samples, :]/1e4,
                         t_test, 'Bvy')
-    make_poloidal_movie(X, Y, Z, Vz_mat[:, M_train:],
-                        np.real(dmd_Q[5*n_samples:6*n_samples, :]/1e4),
-                        np.real(Q_sim[5*n_samples:6*n_samples, :]/1e4),
+    make_poloidal_movie(X, Y, Z, Q[5*n_samples:6*n_samples, M_train:]/1e4,
+                        dmd_Q[5*n_samples:6*n_samples, :]/1e4,
+                        Q_sim[5*n_samples:6*n_samples, :]/1e4,
                         t_test, 'Bvz')

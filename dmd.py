@@ -102,7 +102,7 @@ def dmd(data, r, time, M_train):
         Bfield += 0.5*b[mode]*np.outer(Bt[:, mode],
                                        Vandermonde[mode, M_train:])
     Bfield += np.conj(Bfield)
-    return Bfield
+    return Bfield.real
 
 
 def compare_SINDy_DMD(t_train, t_test, Q_train, sindy_Q_train,
